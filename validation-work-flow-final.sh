@@ -18,15 +18,15 @@ LONGREADS='/Volumes/data/algae/data/reads/guppy_3_3_0_hac_output/algae_hac_long_
 # define the directory containing the metaFlye assembly
 RAWFASTA='/Volumes/data/cmags/data/flye_assembly_meta_hac'
 # directory to work for the relevant project
-LOCAL=''
+MASTERDIR=''
 # directory to work for reassemblies, annotations and dot plots
-LOCAL1=`echo $LOCAL/polishing`
-LOCAL2=`echo $LOCAL/re-assemblies`
-LOCAL3=`echo $LOCAL/contig-annotations`
-LOCAL4=`echo $LOCAL/dot-plots`
-TABLE1=`echo $LOCAL/output/table1.txt`
-TABLE2=`echo $LOCAL/output/table2.txt`
-TABLE3=`echo $LOCAL/output/table3.txt`
+POLISHING=`echo $MASTERDIR/polishing`
+ASSEMBLIES=`echo $MASTERDIR/re-assemblies`
+ANVIOANNOTATIONS=`echo $MASTERDIR/contig-annotations`
+DOTPLOTS=`echo $MASTERDIR/dot-plots`
+TABLE1=`echo $MASTERDIR/output/table1.txt`
+TABLE2=`echo $MASTERDIR/output/table2.txt`
+TABLE3=`echo $MASTERDIR/output/table3.txt`
 # path to necessary tools: bowtie2, bowtie2-build, minimap2, samtools, bcftools, rebaler, reapr, pilon, unicycler, flye, tRNAscan-SE-2.0
 BOWTIE='/Volumes/data/bin/bowtie2.3.5/bowtie2'
 BUILD='/Volumes/data/bin/bowtie2.3.5/bowtie2-build'
@@ -46,11 +46,11 @@ PYTHON='/usr/bin/python3.6'
 
 
 
-# make a directory for the project (as defined in the variable LOCAL)
-# output: $LOCAL
-# output: $LOCAL/raw-contigs
-# output: $LOCAL/pilon-logs
-mkdir -p $LOCAL $LOCAL/raw-contigs $LOCAL1/pilon-logs $LOCAL/output $LOCAL/output/circos $LOCAL/output/dotplots
+# make a directory for the project (as defined in the variable MASTERDIR)
+# output: $MASTERDIR
+# output: $MASTERDIR/raw-contigs
+# output: $MASTERDIR/pilon-logs
+mkdir -p $MASTERDIR $MASTERDIR/raw-contigs $POLISHING/pilon-logs $MASTERDIR/output $MASTERDIR/output/circos $MASTERDIR/output/dotplots
 
 
 
@@ -65,14 +65,14 @@ mkdir -p $LOCAL $LOCAL/raw-contigs $LOCAL1/pilon-logs $LOCAL/output $LOCAL/outpu
 # extract circular contigs that are over 300kb in size; input requires the metaFlye directory
 # input: $RAWFASTA/assembly_info.txt
 # input: $RAWFASTA/assembly.fasta 
-# output: $LOCAL/raw-contigs/$name (series of different files, one for every circular contig larger than 200kb)
+# output: $MASTERDIR/raw-contigs/$name (series of different files, one for every circular contig larger than 200kb)
 # requires: extract-circularized-fasta.py
-./extract-circularized-fasta.py $RAWFASTA/assembly_info.txt $RAWFASTA/assembly.fasta $LOCAL/raw-contigs/mags-to-analyze.txt $LOCAL/raw-contigs $SIZE
+./extract-circularized-fasta.py $RAWFASTA/assembly_info.txt $RAWFASTA/assembly.fasta $MASTERDIR/raw-contigs/mags-to-analyze.txt $MASTERDIR/raw-contigs $SIZE
 
 # define the mags to analyze from the output of the last script
-# input: $LOCAL/raw-contigs/mags-to-analyze.txt
+# input: $MASTERDIR/raw-contigs/mags-to-analyze.txt
 # output: defined MAGS variable for future use
-MAGS=`awk '{print $1}' $LOCAL/raw-contigs/mags-to-analyze.txt`
+MAGS=`awk '{print $1}' $MASTERDIR/raw-contigs/mags-to-analyze.txt`
 
 
 
@@ -88,67 +88,67 @@ for name in $MAGS
 do
 
 # create a directory for the contig validation, polishing, reassembly, etc
-# output: $LOCAL/$name
-# output: $LOCAL/$name/output
+# output: $MASTERDIR/$name
+# output: $MASTERDIR/$name/output
 # output: $name/output/fcd_errors
 # output: $name/output/total_coverage
-# output: $LOCAL2
-# output: $LOCAL2/$name
-# output: $LOCAL2/$name/flye
-# output: $LOCAL2/$name/unicycler
-# output: $LOCAL2/$name/unicycler-long
-# output: $LOCAL2/$name/spades
-# output: $LOCAL3
-# output: $LOCAL3/$name
-# output: $LOCAL3/$name/output
-# output: $LOCAL4
-# output: $LOCAL4/$name
-# output: $LOCAL/$name/circos
-mkdir -p $LOCAL/$name $LOCAL/$name/output $LOCAL/$name/output/fcd_errors $LOCAL/$name/output/total_coverage $LOCAL2 $LOCAL2/$name $LOCAL2/$name/flye $LOCAL2/$name/unicycler $LOCAL2/$name/unicycler-long $LOCAL2/$name/spades $LOCAL3 $LOCAL3/$name $LOCAL3/$name/output $LOCAL4 $LOCAL4/$name $LOCAL/$name/circos
+# output: $ASSEMBLIES
+# output: $ASSEMBLIES/$name
+# output: $ASSEMBLIES/$name/flye
+# output: $ASSEMBLIES/$name/unicycler
+# output: $ASSEMBLIES/$name/unicycler-long
+# output: $ASSEMBLIES/$name/spades
+# output: $ANVIOANNOTATIONS
+# output: $ANVIOANNOTATIONS/$name
+# output: $ANVIOANNOTATIONS/$name/output
+# output: $DOTPLOTS
+# output: $DOTPLOTS/$name
+# output: $MASTERDIR/$name/circos
+mkdir -p $MASTERDIR/$name $MASTERDIR/$name/output $MASTERDIR/$name/output/fcd_errors $MASTERDIR/$name/output/total_coverage $ASSEMBLIES $ASSEMBLIES/$name $ASSEMBLIES/$name/flye $ASSEMBLIES/$name/unicycler $ASSEMBLIES/$name/unicycler-long $ASSEMBLIES/$name/spades $ANVIOANNOTATIONS $ANVIOANNOTATIONS/$name $ANVIOANNOTATIONS/$name/output $DOTPLOTS $DOTPLOTS/$name $MASTERDIR/$name/circos
 
 # link the raw fasta file to that directory for analysis
-# input: $LOCAL/raw-contigs/$name
-# output: $LOCAL/$name/$name-contigs.fa
-cp $LOCAL/raw-contigs/$name $LOCAL/$name/$name-contigs.fa
+# input: $MASTERDIR/raw-contigs/$name
+# output: $MASTERDIR/$name/$name-contigs.fa
+cp $MASTERDIR/raw-contigs/$name $MASTERDIR/$name/$name-contigs.fa
 
 # the header line needs to be changed to circular=true before rebaler
-# input: $LOCAL/$name/$name-contigs.fa
-# output: $LOCAL/$name/$name-contigs-edited.fa
-sed '1 s/\(^>.*$\)/\1circular=true/' $LOCAL/$name/$name-contigs.fa > $LOCAL/$name/$name-contigs-edited.fa
+# input: $MASTERDIR/$name/$name-contigs.fa
+# output: $MASTERDIR/$name/$name-contigs-edited.fa
+sed '1 s/\(^>.*$\)/\1circular=true/' $MASTERDIR/$name/$name-contigs.fa > $MASTERDIR/$name/$name-contigs-edited.fa
 
 # conncatenate the genomes into a single fasta file for minimap2 mapping
-# input: $LOCAL/$name/$name-contigs-edited.fa
-# output: $LOCAL1/raw-genomes.fa
-cat $LOCAL/$name/$name-contigs-edited.fa >> $LOCAL1/raw-genomes.fa
+# input: $MASTERDIR/$name/$name-contigs-edited.fa
+# output: $POLISHING/raw-genomes.fa
+cat $MASTERDIR/$name/$name-contigs-edited.fa >> $POLISHING/raw-genomes.fa
 
 done
 
 # map the nanopore long reads to the mag
-# input: $LOCAL1/raw-genomes.fa
+# input: $POLISHING/raw-genomes.fa
 # input: $LONGREADS
-# output: $LOCAL1/raw-genome-nanopore.sam
-$MAP -t $THREADS -aQLx map-ont --secondary=no --sam-hit-only $LOCAL1/raw-genomes.fa $LONGREADS > $LOCAL1/raw-genome-nanopore.sam
+# output: $POLISHING/raw-genome-nanopore.sam
+$MAP -t $THREADS -aQLx map-ont --secondary=no --sam-hit-only $POLISHING/raw-genomes.fa $LONGREADS > $POLISHING/raw-genome-nanopore.sam
 
 # extract relevant information on nanopore sequence alignments scores
-# input: $LOCAL1/raw-genome-nanopore.sam
-# output: $LOCAL1/sam.txt
-awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t"d}' $LOCAL1/raw-genome-nanopore.sam > $LOCAL1/sam.txt
+# input: $POLISHING/raw-genome-nanopore.sam
+# output: $POLISHING/sam.txt
+awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t"d}' $POLISHING/raw-genome-nanopore.sam > $POLISHING/sam.txt
 
 # get the length of the sequence and length mapped against the query from the cigar string
-# input: $LOCAL1/cigars.txt
-# output: $LOCAL1/cigar-results.txt
+# input: $POLISHING/cigars.txt
+# output: $POLISHING/cigar-results.txt
 # requires: cigar-parse.py
-./cigar-parse.py $LOCAL1/sam.txt $LOCAL1/final-read-names.txt
+./cigar-parse.py $POLISHING/sam.txt $POLISHING/final-read-names.txt
 
 # filter the nanopore mapped reads for a primary alignment (i.e., bit flag in sam output is 0 or 16)
 # this gets the sam headers in the file
-# input: $LOCAL1/raw-genome-nanopore.sam
-# output: $LOCAL1/nanopore-filtered-to-raw.sam
-awk '$0 ~ "@"{print $0}' $LOCAL1/raw-genome-nanopore.sam > $LOCAL1/nanopore-filtered-to-raw.sam
-# input: $LOCAL1/final-read-names.txt
-# input: $LOCAL1/raw-genome-nanopore.sam
-# output: $LOCAL1/nanopore-filtered-to-raw.sam
-awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $LOCAL1/final-read-names.txt $LOCAL1/raw-genome-nanopore.sam >> $LOCAL1/nanopore-filtered-to-raw.sam
+# input: $POLISHING/raw-genome-nanopore.sam
+# output: $POLISHING/nanopore-filtered-to-raw.sam
+awk '$0 ~ "@"{print $0}' $POLISHING/raw-genome-nanopore.sam > $POLISHING/nanopore-filtered-to-raw.sam
+# input: $POLISHING/final-read-names.txt
+# input: $POLISHING/raw-genome-nanopore.sam
+# output: $POLISHING/nanopore-filtered-to-raw.sam
+awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $POLISHING/final-read-names.txt $POLISHING/raw-genome-nanopore.sam >> $POLISHING/nanopore-filtered-to-raw.sam
 
 echo Finished filtering nanopore reads against raw assemblies
 
@@ -159,192 +159,192 @@ for name in $MAGS
 do
 
 # get nanopore reads for a given mag
-# input: $LOCAL1/nanopore-filtered-to-raw.sam
-# output: $LOCAL/$name/nanopore-filtered-to-raw.sam
-grep "^@" $LOCAL1/nanopore-filtered-to-raw.sam > $LOCAL/$name/nanopore-filtered-to-raw.sam
-# input: $LOCAL1/nanopore-filtered-to-raw.sam
-# output: $LOCAL/$name/nanopore-filtered-to-raw.sam
-grep $name $LOCAL1/nanopore-filtered-to-raw.sam | grep -v "^@" >> $LOCAL/$name/nanopore-filtered-to-raw.sam
+# input: $POLISHING/nanopore-filtered-to-raw.sam
+# output: $MASTERDIR/$name/nanopore-filtered-to-raw.sam
+grep "^@" $POLISHING/nanopore-filtered-to-raw.sam > $MASTERDIR/$name/nanopore-filtered-to-raw.sam
+# input: $POLISHING/nanopore-filtered-to-raw.sam
+# output: $MASTERDIR/$name/nanopore-filtered-to-raw.sam
+grep $name $POLISHING/nanopore-filtered-to-raw.sam | grep -v "^@" >> $MASTERDIR/$name/nanopore-filtered-to-raw.sam
 
 # intialize (sort) the sam file using samtools
-# input: $LOCAL/$name/nanopore-filtered-to-raw.sam
-# output: $LOCAL/$name/nanopore-filtered-to-raw-sorted.bam
-$SAMTOOLS sort $LOCAL/$name/nanopore-filtered-to-raw.sam -o $LOCAL/$name/nanopore-filtered-to-raw-sorted.bam -@ $THREADS
+# input: $MASTERDIR/$name/nanopore-filtered-to-raw.sam
+# output: $MASTERDIR/$name/nanopore-filtered-to-raw-sorted.bam
+$SAMTOOLS sort $MASTERDIR/$name/nanopore-filtered-to-raw.sam -o $MASTERDIR/$name/nanopore-filtered-to-raw-sorted.bam -@ $THREADS
 
 # convert the sam file into fastq for use in polishing
-# input: $LOCAL/$name/nanopore-filtered-to-raw-sorted.bam
-# output: $LOCAL/$name/nanopore-filtered-to-raw.fastq
-$SAMTOOLS fastq $LOCAL/$name/nanopore-filtered-to-raw-sorted.bam > $LOCAL/$name/nanopore-filtered-to-raw.fastq -@ $THREADS
+# input: $MASTERDIR/$name/nanopore-filtered-to-raw-sorted.bam
+# output: $MASTERDIR/$name/nanopore-filtered-to-raw.fastq
+$SAMTOOLS fastq $MASTERDIR/$name/nanopore-filtered-to-raw-sorted.bam > $MASTERDIR/$name/nanopore-filtered-to-raw.fastq -@ $THREADS
 
 # use rebaler to correct the assembly using nanopore
 # changed to the edited file
-# input:$LOCAL/$name/$name-contigs-edited.fa
-# input: $LOCAL/$name/nanopore-filtered-to-raw.fastq
-# output: $LOCAL/$name/rebaler-genome.fasta
-$REBALER -t $THREADS $LOCAL/$name/$name-contigs-edited.fa $LOCAL/$name/nanopore-filtered-to-raw.fastq > $LOCAL/$name/rebaler-genome.fasta
+# input:$MASTERDIR/$name/$name-contigs-edited.fa
+# input: $MASTERDIR/$name/nanopore-filtered-to-raw.fastq
+# output: $MASTERDIR/$name/rebaler-genome.fasta
+$REBALER -t $THREADS $MASTERDIR/$name/$name-contigs-edited.fa $MASTERDIR/$name/nanopore-filtered-to-raw.fastq > $MASTERDIR/$name/rebaler-genome.fasta
 
 # export the fastq and genomes
-# input: $LOCAL/$name/rebaler-genome.fasta
-# output: $LOCAL1/all-rebaler-genomes.fasta
-cat $LOCAL/$name/rebaler-genome.fasta >> $LOCAL1/all-rebaler-genomes.fasta
-# input: $LOCAL/$name/nanopore-filtered-to-raw.fastq
-# output: $LOCAL/nanopore-filtered.fastq
-cat $LOCAL/$name/nanopore-filtered-to-raw.fastq >> $LOCAL1/nanopore-filtered.fastq
+# input: $MASTERDIR/$name/rebaler-genome.fasta
+# output: $POLISHING/all-rebaler-genomes.fasta
+cat $MASTERDIR/$name/rebaler-genome.fasta >> $POLISHING/all-rebaler-genomes.fasta
+# input: $MASTERDIR/$name/nanopore-filtered-to-raw.fastq
+# output: $MASTERDIR/nanopore-filtered.fastq
+cat $MASTERDIR/$name/nanopore-filtered-to-raw.fastq >> $POLISHING/nanopore-filtered.fastq
 
 done
 
 echo Finished rebaler corrections 
 
 # remap the nanopore against the rebaler assemblies
-# input: $LOCAL1/all-rebaler-genomes.fasta
-# input: $LOCAL1/nanopore-filtered.fastq
-# output: $LOCAL1/nanopore-to-rebaler.sam
-$MAP -t $THREADS -aLQx map-ont --sam-hit-only --secondary=no $LOCAL1/all-rebaler-genomes.fasta $LOCAL1/nanopore-filtered.fastq > $LOCAL1/nanopore-to-rebaler.sam
+# input: $POLISHING/all-rebaler-genomes.fasta
+# input: $POLISHING/nanopore-filtered.fastq
+# output: $POLISHING/nanopore-to-rebaler.sam
+$MAP -t $THREADS -aLQx map-ont --sam-hit-only --secondary=no $POLISHING/all-rebaler-genomes.fasta $POLISHING/nanopore-filtered.fastq > $POLISHING/nanopore-to-rebaler.sam
 
 # make a bowtie2 database to map the illumina reads against the rebaler assemblies
-# input: $LOCAL1/all-rebaler-genomes.fasta
-# output: $LOCAL1/all-rebaler-polished has 6 files
+# input: $POLISHING/all-rebaler-genomes.fasta
+# output: $POLISHING/all-rebaler-polished has 6 files
 # output files: all-rebaler-polished.1.bt2 all-rebaler-polished.2.bt2 all-rebaler-polished.3.bt2 all-rebaler-polished.4.bt2 all-rebaler-polished.rev.1.bt2 all-rebaler-polished.rev.2.bt2
-$BUILD $LOCAL1/all-rebaler-genomes.fasta $LOCAL1/all-rebaler-polished
+$BUILD $POLISHING/all-rebaler-genomes.fasta $POLISHING/all-rebaler-polished
 
 # map the illumina reads against the rebaler assemblies
-# input: $LOCAL1/all-rebaler-polished database
+# input: $POLISHING/all-rebaler-polished database
 # input: $FWD
 # input: $REV
-# output: $LOCAL1/all-illumina-to-rebaler.sam
-$BOWTIE -x $LOCAL1/all-rebaler-polished -1 $FWD -2 $REV -p $THREADS -S $LOCAL1/all-illumina-to-rebaler.sam --no-unal --no-discordant --end-to-end --very-sensitive
+# output: $POLISHING/all-illumina-to-rebaler.sam
+$BOWTIE -x $POLISHING/all-rebaler-polished -1 $FWD -2 $REV -p $THREADS -S $POLISHING/all-illumina-to-rebaler.sam --no-unal --no-discordant --end-to-end --very-sensitive
 
 # progress update
 echo Mapped to rebaler
 
 # sort the sam file
-# input: $LOCAL1/nanopore-to-rebaler.sam
-# output: $LOCAL1/nanopore-to-rebaler-sorted.bam
-$SAMTOOLS sort -@ $THREADS $LOCAL1/nanopore-to-rebaler.sam -o $LOCAL1/nanopore-to-rebaler-sorted.bam
+# input: $POLISHING/nanopore-to-rebaler.sam
+# output: $POLISHING/nanopore-to-rebaler-sorted.bam
+$SAMTOOLS sort -@ $THREADS $POLISHING/nanopore-to-rebaler.sam -o $POLISHING/nanopore-to-rebaler-sorted.bam
 
 # index the bam file 
-# input: $LOCAL1/nanopore-to-rebaler-sorted.bam
-# output: $LOCAL1/nanopore-to-rebaler-sorted.bam.bai
-$SAMTOOLS index -@ $THREADS $LOCAL1/nanopore-to-rebaler-sorted.bam
+# input: $POLISHING/nanopore-to-rebaler-sorted.bam
+# output: $POLISHING/nanopore-to-rebaler-sorted.bam.bai
+$SAMTOOLS index -@ $THREADS $POLISHING/nanopore-to-rebaler-sorted.bam
 
 # remove non-primary alignments and convert to bam
-# input: $LOCAL1/all-illumina-to-rebaler.sam
-# output: $LOCAL1/all-illumina-to-rebaler.bam
-$SAMTOOLS view -@ $THREADS -F 256 -bS $LOCAL1/all-illumina-to-rebaler.sam > $LOCAL1/all-illumina-to-rebaler.bam
+# input: $POLISHING/all-illumina-to-rebaler.sam
+# output: $POLISHING/all-illumina-to-rebaler.bam
+$SAMTOOLS view -@ $THREADS -F 256 -bS $POLISHING/all-illumina-to-rebaler.sam > $POLISHING/all-illumina-to-rebaler.bam
 
 # use samtools to sort the mapped reads
-# input: $LOCAL1/all-illumina-to-rebaler.bam
-# output: $LOCAL1/all-illumina-to-rebaler-sorted.bam
-$SAMTOOLS sort $LOCAL1/all-illumina-to-rebaler.bam -o $LOCAL1/all-illumina-to-rebaler-sorted.bam -@ $THREADS
+# input: $POLISHING/all-illumina-to-rebaler.bam
+# output: $POLISHING/all-illumina-to-rebaler-sorted.bam
+$SAMTOOLS sort $POLISHING/all-illumina-to-rebaler.bam -o $POLISHING/all-illumina-to-rebaler-sorted.bam -@ $THREADS
 
 # index the sorted mapped reads creating and index
-# input: $LOCAL1/all-illumina-to-rebaler-sorted.bam
-# output: $LOCAL1/all-illumina-to-rebaler-sorted.bam.bai
-$SAMTOOLS index -b $LOCAL1/all-illumina-to-rebaler-sorted.bam -@ $THREADS
+# input: $POLISHING/all-illumina-to-rebaler-sorted.bam
+# output: $POLISHING/all-illumina-to-rebaler-sorted.bam.bai
+$SAMTOOLS index -b $POLISHING/all-illumina-to-rebaler-sorted.bam -@ $THREADS
 
 # pilon does not requires subsetting the reads to those specific for a particular contig
 # correct the rebaler assembly using both illumina and nanopore reads via pilon. Send logs to log directory. OUTPUTS MULTIPLE FILES
-# input:$LOCAL1/all-rebaler-genomes.fasta
-# input: $LOCAL1/all-illumina-to-rebaler-sorted.bam
-# input: $LOCAL1/nanopore-to-rebaler-sorted.bam
-# input: $LOCAL1/all-illumina-to-rebaler-sorted.bam.bai
-# input: $LOCAL1/nanopore-to-rebaler-sorted.bam.bai
-# output: $LOCAL1/pilon-logs/pilon.log
-# output dir: $LOCAL1/pilon
+# input:$POLISHING/all-rebaler-genomes.fasta
+# input: $POLISHING/all-illumina-to-rebaler-sorted.bam
+# input: $POLISHING/nanopore-to-rebaler-sorted.bam
+# input: $POLISHING/all-illumina-to-rebaler-sorted.bam.bai
+# input: $POLISHING/nanopore-to-rebaler-sorted.bam.bai
+# output: $POLISHING/pilon-logs/pilon.log
+# output dir: $POLISHING/pilon
 # output includes 3 files: pilon.changes pilon.fasta pilon.fasta.fai
-/usr/bin/java -Xmx32G -jar $PILON --genome $LOCAL1/all-rebaler-genomes.fasta --frags $LOCAL1/all-illumina-to-rebaler-sorted.bam --nanopore $LOCAL1/nanopore-to-rebaler-sorted.bam --fix snps,indels --threads $THREADS --verbose --outdir $LOCAL1/pilon --changes &> $LOCAL1/pilon-logs/pilon.log
+/usr/bin/java -Xmx32G -jar $PILON --genome $POLISHING/all-rebaler-genomes.fasta --frags $POLISHING/all-illumina-to-rebaler-sorted.bam --nanopore $POLISHING/nanopore-to-rebaler-sorted.bam --fix snps,indels --threads $THREADS --verbose --outdir $POLISHING/pilon --changes &> $POLISHING/pilon-logs/pilon.log
 
-sed 's/circular=true_pilon//g' $LOCAL1/pilon/pilon.fasta > $LOCAL1/all-pilon-genomes.fasta
+sed 's/circular=true_pilon//g' $POLISHING/pilon/pilon.fasta > $POLISHING/all-pilon-genomes.fasta
 
 # map the filtered nanopore reads to the pilon reassembly
-# input: $LOCAL1/all-pilon-genomes.fasta
-# input: $LOCAL1/nanopore-filtered.fastq
-# output: $LOCAL1/nanopore-to-pilon.sam
-$MAP -t $THREADS -aLQx map-ont --secondary=no $LOCAL1/all-pilon-genomes.fasta $LOCAL1/nanopore-filtered.fastq > $LOCAL1/nanopore-to-pilon.sam
+# input: $POLISHING/all-pilon-genomes.fasta
+# input: $POLISHING/nanopore-filtered.fastq
+# output: $POLISHING/nanopore-to-pilon.sam
+$MAP -t $THREADS -aLQx map-ont --secondary=no $POLISHING/all-pilon-genomes.fasta $POLISHING/nanopore-filtered.fastq > $POLISHING/nanopore-to-pilon.sam
 
 # build a bowtie2 database to map the illumina reads against the pilon polished assemblies
-# input: $LOCAL1/all-pilon-genomes.fasta
-# output: $LOCAL1/all-pilon-genomes has 6 files
+# input: $POLISHING/all-pilon-genomes.fasta
+# output: $POLISHING/all-pilon-genomes has 6 files
 # output files: all-pilon-polished.1.bt2 all-pilon-polished.4.bt2 all-pilon-polished.2.bt2 all-pilon-polished.rev.1.bt2 all-pilon-polished.3.bt2 all-pilon-polished.rev.2.bt2
-$BUILD $LOCAL1/all-pilon-genomes.fasta $LOCAL1/all-pilon-genomes
+$BUILD $POLISHING/all-pilon-genomes.fasta $POLISHING/all-pilon-genomes
 
 # re-map the short reads against the pilon polished references
-# input: $LOCAL1/all-pilon-genomes database
+# input: $POLISHING/all-pilon-genomes database
 # input: $FWD
 # input: $REV
-# output: $LOCAL1/illumina-to-all-pilon-genomes.sam
-$BOWTIE -x $LOCAL1/all-pilon-genomes -1 $FWD -2 $REV -p $THREADS -S $LOCAL1/illumina-to-all-pilon-genomes.sam --no-unal --no-discordant --end-to-end --very-sensitive
+# output: $POLISHING/illumina-to-all-pilon-genomes.sam
+$BOWTIE -x $POLISHING/all-pilon-genomes -1 $FWD -2 $REV -p $THREADS -S $POLISHING/illumina-to-all-pilon-genomes.sam --no-unal --no-discordant --end-to-end --very-sensitive
 
 # remove unmapped reads and convert to bam
-# input: $LOCAL1/nanopore-to-pilon.sam
-# output: $LOCAL1/nanopore-to-pilon.bam
-$SAMTOOLS view -F 4 -bS $LOCAL1/nanopore-to-pilon.sam -o $LOCAL1/nanopore-to-pilon.bam -@ $THREADS
+# input: $POLISHING/nanopore-to-pilon.sam
+# output: $POLISHING/nanopore-to-pilon.bam
+$SAMTOOLS view -F 4 -bS $POLISHING/nanopore-to-pilon.sam -o $POLISHING/nanopore-to-pilon.bam -@ $THREADS
 
 # use samtools to sort nanpore mapping to the pilon reassembly
-# input: $LOCAL1/nanopore-to-pilon.bam
-# output: $LOCAL1/nanopore-to-pilon-sorted.bam
-$SAMTOOLS sort $LOCAL1/nanopore-to-pilon.bam -o $LOCAL1/nanopore-to-pilon-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-to-pilon.bam
+# output: $POLISHING/nanopore-to-pilon-sorted.bam
+$SAMTOOLS sort $POLISHING/nanopore-to-pilon.bam -o $POLISHING/nanopore-to-pilon-sorted.bam -@ $THREADS
 
 # convert the illumina reads to bam and sort them
-# input: $LOCAL1/illumina-to-all-pilon-genomes.sam
-# output: $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam
-$SAMTOOLS sort $LOCAL1/illumina-to-all-pilon-genomes.sam > $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam -@ $THREADS
+# input: $POLISHING/illumina-to-all-pilon-genomes.sam
+# output: $POLISHING/illumina-to-all-pilon-genomes-sorted.bam
+$SAMTOOLS sort $POLISHING/illumina-to-all-pilon-genomes.sam > $POLISHING/illumina-to-all-pilon-genomes-sorted.bam -@ $THREADS
 
 # progress update
 echo Finished mapping to pilon
 
 # index the reads in preparation for reapr
-# input: $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam
-# output: $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam.bai
-$SAMTOOLS index $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam
+# input: $POLISHING/illumina-to-all-pilon-genomes-sorted.bam
+# output: $POLISHING/illumina-to-all-pilon-genomes-sorted.bam.bai
+$SAMTOOLS index $POLISHING/illumina-to-all-pilon-genomes-sorted.bam
 
 # use reapr pipeline to check for errors in assembly according to illumina reads
-# input: $LOCAL1/all-pilon-genomes.fasta
-# input: $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam
-# input: $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam.bai
-# output dir: $LOCAL1/reapr has multiple files
-$REAPR pipeline $LOCAL1/all-pilon-genomes.fasta $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam $LOCAL1/reapr
+# input: $POLISHING/all-pilon-genomes.fasta
+# input: $POLISHING/illumina-to-all-pilon-genomes-sorted.bam
+# input: $POLISHING/illumina-to-all-pilon-genomes-sorted.bam.bai
+# output dir: $POLISHING/reapr has multiple files
+$REAPR pipeline $POLISHING/all-pilon-genomes.fasta $POLISHING/illumina-to-all-pilon-genomes-sorted.bam $POLISHING/reapr
 
 # progress update
 echo Finished reapr
 
 # generate mpileup files for variant calling
-# input: $LOCAL1/all-pilon-genomes.fasta
-# input: $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam
-# output: $LOCAL1/mpileup.txt
-$BCFTOOLS mpileup --threads $THREADS -o $LOCAL1/mpileup.txt -f $LOCAL1/all-pilon-genomes.fasta $LOCAL1/illumina-to-all-pilon-genomes-sorted.bam
+# input: $POLISHING/all-pilon-genomes.fasta
+# input: $POLISHING/illumina-to-all-pilon-genomes-sorted.bam
+# output: $POLISHING/mpileup.txt
+$BCFTOOLS mpileup --threads $THREADS -o $POLISHING/mpileup.txt -f $POLISHING/all-pilon-genomes.fasta $POLISHING/illumina-to-all-pilon-genomes-sorted.bam
 
 # collect variants from mpileup
-# input: $LOCAL1/mpileup.txt
-# output: $LOCAL1/variants.txt
-$BCFTOOLS call -cv -o $LOCAL1/variants.txt --threads $THREADS $LOCAL1/mpileup.txt
+# input: $POLISHING/mpileup.txt
+# output: $POLISHING/variants.txt
+$BCFTOOLS call -cv -o $POLISHING/variants.txt --threads $THREADS $POLISHING/mpileup.txt
 
 # filter for variants that have > 50% of reads supporting the call (indels)
-# input: $LOCAL1/variants.txt
-# output: $LOCAL1/variants-filtered.bcf
-$BCFTOOLS filter -i '%MAX(IMF)>0.5' $LOCAL1/variants.txt -Ob > $LOCAL1/variants-filtered.bcf
+# input: $POLISHING/variants.txt
+# output: $POLISHING/variants-filtered.bcf
+$BCFTOOLS filter -i '%MAX(IMF)>0.5' $POLISHING/variants.txt -Ob > $POLISHING/variants-filtered.bcf
 
 # normalization is needed to left align each of the variants
-# input: $LOCAL1/all-pilon-genomes.fasta
-# input: $LOCAL1/variants-filtered.bcf
-# output: $LOCAL1/variants-norm.bcf
-$BCFTOOLS norm -d all -f $LOCAL1/all-pilon-genomes.fasta $LOCAL1/variants-filtered.bcf -Ob > $LOCAL1/variants-norm.bcf
+# input: $POLISHING/all-pilon-genomes.fasta
+# input: $POLISHING/variants-filtered.bcf
+# output: $POLISHING/variants-norm.bcf
+$BCFTOOLS norm -d all -f $POLISHING/all-pilon-genomes.fasta $POLISHING/variants-filtered.bcf -Ob > $POLISHING/variants-norm.bcf
 
 # index these variants
-# input: $LOCAL1/variants-norm.bcf
-# output: $LOCAL1/variants-norm.bcf.csi
-$BCFTOOLS index $LOCAL1/variants-norm.bcf -o $LOCAL1/variants-norm.bcf.csi
+# input: $POLISHING/variants-norm.bcf
+# output: $POLISHING/variants-norm.bcf.csi
+$BCFTOOLS index $POLISHING/variants-norm.bcf -o $POLISHING/variants-norm.bcf.csi
 
 # apply all the variants to a final polished assembly
-# input: $LOCAL1/all-pilon-genomes.fasta
-# input: $LOCAL1/variants-norm.bcf
-# output: $LOCAL1/final-assemblies.fasta
-$BCFTOOLS consensus -f $LOCAL1/all-pilon-genomes.fasta $LOCAL1/variants-norm.bcf > $LOCAL1/final-assemblies.fasta
+# input: $POLISHING/all-pilon-genomes.fasta
+# input: $POLISHING/variants-norm.bcf
+# output: $POLISHING/final-assemblies.fasta
+$BCFTOOLS consensus -f $POLISHING/all-pilon-genomes.fasta $POLISHING/variants-norm.bcf > $POLISHING/final-assemblies.fasta
 
 # extract the final reads from each polsihed assembly
-# input: $LOCAL1/final-assemblies.fasta
-# output: $LOCAL/$name/$name-final-assembly.fasta (same number of files as contigs defined in $MAGS)
-./extract-circularized-fasta.py $LOCAL1/final-assemblies.fasta $LOCAL
+# input: $POLISHING/final-assemblies.fasta
+# output: $MASTERDIR/$name/$name-final-assembly.fasta (same number of files as contigs defined in $MAGS)
+./extract-circularized-fasta.py $POLISHING/final-assemblies.fasta $MASTERDIR
 
 echo Finished all validation and polishing
 
@@ -385,42 +385,42 @@ do
 source /Volumes/data/bin/miniconda3/bin/activate
 
 # run prokka on all genomes, make sure you have the most recent version of tbl2asn, or this will not work
-# input: $name $LOCAL/$name/$name-final-assembly.fasta
-# output (multiple files; relevant ones provided) $LOCAL/$name/circos/prokka-initial/$name.gff
-prokka --outdir $LOCAL/$name/circos/prokka --prefix $name $LOCAL/$name/$name-final-assembly.fasta --cpu $THREADS
+# input: $name $MASTERDIR/$name/$name-final-assembly.fasta
+# output (multiple files; relevant ones provided) $MASTERDIR/$name/circos/prokka-initial/$name.gff
+prokka --outdir $MASTERDIR/$name/circos/prokka --prefix $name $MASTERDIR/$name/$name-final-assembly.fasta --cpu $THREADS
 
 # re-orient the genome around the dnaA gene where there is a switch in GC-skew
-# input: $LOCAL/$name/circos/prokka-initial/$name.gff
-# output: $LOCAL/$name/circos/dnaA-loci.txt
-grep 'dnaA\|DnaA\|dnaa' $LOCAL/$name/circos/prokka/$name.gff > $LOCAL/$name/circos/dnaA-loci.txt
+# input: $MASTERDIR/$name/circos/prokka-initial/$name.gff
+# output: $MASTERDIR/$name/circos/dnaA-loci.txt
+grep 'dnaA\|DnaA\|dnaa' $MASTERDIR/$name/circos/prokka/$name.gff > $MASTERDIR/$name/circos/dnaA-loci.txt
 
-# input: $LOCAL/$name/circos/dnaA-loci.txt
-# input: $LOCAL/$name/$name-final-assembly.fasta
-# output: $LOCAL/$name/$name-final-assembly-oriented.fasta
-# output: $LOCAL/$name/$name-orientation-shift.txt
+# input: $MASTERDIR/$name/circos/dnaA-loci.txt
+# input: $MASTERDIR/$name/$name-final-assembly.fasta
+# output: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
+# output: $MASTERDIR/$name/$name-orientation-shift.txt
 # requires: orient-v2.py
-./orient-v2.py $LOCAL/$name/circos/dnaA-loci.txt $LOCAL/$name/$name-final-assembly.fasta $LOCAL/$name/$name-final-assembly-oriented.fasta $name $LOCAL/$name/$name-orientation-shift.txt
+./orient-v2.py $MASTERDIR/$name/circos/dnaA-loci.txt $MASTERDIR/$name/$name-final-assembly.fasta $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name $MASTERDIR/$name/$name-orientation-shift.txt
 
 # get the gc content, gc skew and culmulative gc skew in 1000 base windows
-# input: $LOCAL/$name/$name-final-assembly.fasta
-# output: $LOCAL/$name/$name-gc-info.txt
+# input: $MASTERDIR/$name/$name-final-assembly.fasta
+# output: $MASTERDIR/$name/$name-gc-info.txt
 # requires: circlize_gc_information.R
-./circlize_gc_information.R -i $LOCAL/$name/$name-final-assembly-oriented.fasta -o $LOCAL/$name/circos/$name-gc-info.txt
+./circlize_gc_information.R -i $MASTERDIR/$name/$name-final-assembly-oriented.fasta -o $MASTERDIR/$name/circos/$name-gc-info.txt
 
 # rebuild the final assembly to have 80kb of the beginning of the genome copied to the end of the genome to improve remapping of long reads
-# input: $LOCAL/$name/$name-final-assembly-oriented.fasta
-# output: $LOCAL/$name/$name-final-assembly-reverse-start.fasta
+# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
+# output: $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
 # requires: modify-genome-v4.py
-./modify-genome-v4.py $LOCAL/$name/$name-final-assembly-oriented.fasta $LOCAL/$name/$name-final-assembly-reverse-start.fasta
+./modify-genome-v4.py $MASTERDIR/$name/$name-final-assembly-oriented.fasta $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
 
 # group all genomes oriented and their reverse pair
-# input: $LOCAL/$name/$name-final-assembly-reverse-start.fasta
-# output: $LOCAL1/all-reverse-start.fasta
-cat $LOCAL/$name/$name-final-assembly-reverse-start.fasta >> $LOCAL1/all-reverse-start.fasta
+# input: $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
+# output: $POLISHING/all-reverse-start.fasta
+cat $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta >> $POLISHING/all-reverse-start.fasta
 # group all oriented genomes
-# input: $LOCAL/$name/$name-final-assembly-oriented.fasta
-# output: $LOCAL1/all-oriented.fasta
-cat $LOCAL/$name/$name-final-assembly-oriented.fasta >> $LOCAL1/all-oriented.fasta
+# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
+# output: $POLISHING/all-oriented.fasta
+cat $MASTERDIR/$name/$name-final-assembly-oriented.fasta >> $POLISHING/all-oriented.fasta
 
 done
 
@@ -451,239 +451,239 @@ echo Finished genome orientation
 
 
 # remap unfiltered nanopore reads against the final forward and reverse assemblies
-# input: $LOCAL1/all-reverse-start.fasta
+# input: $POLISHING/all-reverse-start.fasta
 # input: $LONGREADS
-# output: $LOCAL1/nanopore-unfilteredr-to-final.sam
-$MAP -t $THREADS -aLQx map-ont --secondary=no --sam-hit-only $LOCAL1/all-reverse-start.fasta $LONGREADS > $LOCAL1/nanopore-unfilteredr-to-final.sam
+# output: $POLISHING/nanopore-unfilteredr-to-final.sam
+$MAP -t $THREADS -aLQx map-ont --secondary=no --sam-hit-only $POLISHING/all-reverse-start.fasta $LONGREADS > $POLISHING/nanopore-unfilteredr-to-final.sam
 
 # remap unfiltered nanopore reads against the final forward and reverse assemblies
-# input: $LOCAL1/all-oriented.fasta
+# input: $POLISHING/all-oriented.fasta
 # input: $LONGREADS
-# output: $LOCAL1/nanopore-unfilteredf-to-final.sam
-$MAP -t $THREADS -aLQx map-ont --secondary=no --sam-hit-only $LOCAL1/all-oriented.fasta $LONGREADS > $LOCAL1/nanopore-unfilteredf-to-final.sam
+# output: $POLISHING/nanopore-unfilteredf-to-final.sam
+$MAP -t $THREADS -aLQx map-ont --secondary=no --sam-hit-only $POLISHING/all-oriented.fasta $LONGREADS > $POLISHING/nanopore-unfilteredf-to-final.sam
 
 # extract relevant information on nanopore reverse sequence alignments scores
-# input: $LOCAL1/nanopore-unfilteredr-to-final.sam
-# output: $LOCAL1/sam.txt
-awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t"d}' $LOCAL1/nanopore-unfilteredr-to-final.sam > $LOCAL1/sam.txt
+# input: $POLISHING/nanopore-unfilteredr-to-final.sam
+# output: $POLISHING/sam.txt
+awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t"d}' $POLISHING/nanopore-unfilteredr-to-final.sam > $POLISHING/sam.txt
 
 # get the length of the sequence and length mapped against the query from the cigar string
-# input: $LOCAL1/cigars.txt
-# output: $LOCAL1/cigar-results.txt
+# input: $POLISHING/cigars.txt
+# output: $POLISHING/cigar-results.txt
 # requires: cigar-parse.py
-./cigar-parse.py $LOCAL1/sam.txt $LOCAL1/final-read-names.txt
+./cigar-parse.py $POLISHING/sam.txt $POLISHING/final-read-names.txt
 
 # filter the reverse nanopore mapped reads for a primary alignment (i.e., bit flag in sam output is 0 or 16)
 # this gets the sam headers in the file
-# input: $LOCAL1/nanopore-unfilteredr-to-final.sam
-# output: $LOCAL1/nanopore-filteredr-to-final.sam
-awk '$0 ~ "@"{print $0}' $LOCAL1/nanopore-unfilteredr-to-final.sam > $LOCAL1/nanopore-filteredr-to-final.sam
-# input: $LOCAL1/final-read-names.txt
-# input: $LOCAL1/nanopore-unfilteredr-to-final.sam
-# output: $LOCAL1/nanopore-filteredr-to-final.sam
-awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $LOCAL1/final-read-names.txt $LOCAL1/nanopore-unfilteredr-to-final.sam >> $LOCAL1/nanopore-filteredr-to-final.sam
+# input: $POLISHING/nanopore-unfilteredr-to-final.sam
+# output: $POLISHING/nanopore-filteredr-to-final.sam
+awk '$0 ~ "@"{print $0}' $POLISHING/nanopore-unfilteredr-to-final.sam > $POLISHING/nanopore-filteredr-to-final.sam
+# input: $POLISHING/final-read-names.txt
+# input: $POLISHING/nanopore-unfilteredr-to-final.sam
+# output: $POLISHING/nanopore-filteredr-to-final.sam
+awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $POLISHING/final-read-names.txt $POLISHING/nanopore-unfilteredr-to-final.sam >> $POLISHING/nanopore-filteredr-to-final.sam
 
 # extract relevant information on nanopore forward sequence alignments scores
-# input: $LOCAL1/nanopore-unfilteredf-to-final.sam
-# output: $LOCAL1/sam.txt
-awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t"d}' $LOCAL1/nanopore-unfilteredf-to-final.sam > $LOCAL1/sam.txt
+# input: $POLISHING/nanopore-unfilteredf-to-final.sam
+# output: $POLISHING/sam.txt
+awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t"d}' $POLISHING/nanopore-unfilteredf-to-final.sam > $POLISHING/sam.txt
 
 # get the length of the sequence and length mapped against the query from the cigar string
-# input: $LOCAL1/cigars.txt
-# output: $LOCAL1/cigar-results.txt
+# input: $POLISHING/cigars.txt
+# output: $POLISHING/cigar-results.txt
 # requires: cigar-parse.py
-./cigar-parse.py $LOCAL1/sam.txt $LOCAL1/final-read-names.txt
+./cigar-parse.py $POLISHING/sam.txt $POLISHING/final-read-names.txt
 
 # filter the reverse nanopore mapped reads for a primary alignment (i.e., bit flag in sam output is 0 or 16)
 # this gets the sam headers in the file
-# input: $LOCAL1/nanopore-unfilteredf-to-final.sam
-# output: $LOCAL1/nanopore-filteredf-to-final.sam
-awk '$0 ~ "@"{print $0}' $LOCAL1/nanopore-unfilteredf-to-final.sam > $LOCAL1/nanopore-filteredf-to-final.sam
-# input: $LOCAL1/final-read-names.txt
-# input: $LOCAL1/nanopore-unfilteredf-to-final.sam
-# output: $LOCAL1/nanopore-filteredf-to-final.sam
-awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $LOCAL1/final-read-names.txt $LOCAL1/nanopore-unfilteredf-to-final.sam >> $LOCAL1/nanopore-filteredf-to-final.sam
+# input: $POLISHING/nanopore-unfilteredf-to-final.sam
+# output: $POLISHING/nanopore-filteredf-to-final.sam
+awk '$0 ~ "@"{print $0}' $POLISHING/nanopore-unfilteredf-to-final.sam > $POLISHING/nanopore-filteredf-to-final.sam
+# input: $POLISHING/final-read-names.txt
+# input: $POLISHING/nanopore-unfilteredf-to-final.sam
+# output: $POLISHING/nanopore-filteredf-to-final.sam
+awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $POLISHING/final-read-names.txt $POLISHING/nanopore-unfilteredf-to-final.sam >> $POLISHING/nanopore-filteredf-to-final.sam
 
 # make a bowtie2 database for mapping illumina reads to the finally assembly
-# input: $LOCAL1/all-oriented.fasta
-# output: $LOCAL1/genomes-final-assembly
-$BUILD $LOCAL1/all-oriented.fasta $LOCAL1/genomes-final-assembly
+# input: $POLISHING/all-oriented.fasta
+# output: $POLISHING/genomes-final-assembly
+$BUILD $POLISHING/all-oriented.fasta $POLISHING/genomes-final-assembly
 
 # map the illumina reads against the final assembly
-# input: $LOCAL1/genomes-final-assembly
+# input: $POLISHING/genomes-final-assembly
 # input: $FWD
 # input: $REV
-# output: $LOCAL1/illumina-to-final.sam
-$BOWTIE -x $LOCAL1/genomes-final-assembly -1 $FWD -2 $REV -p $THREADS -S $LOCAL1/illumina-to-final.sam --no-unal --no-discordant --end-to-end --very-sensitive
+# output: $POLISHING/illumina-to-final.sam
+$BOWTIE -x $POLISHING/genomes-final-assembly -1 $FWD -2 $REV -p $THREADS -S $POLISHING/illumina-to-final.sam --no-unal --no-discordant --end-to-end --very-sensitive
 
 
 
 # sort the unfiltered-forward nanopore reads
-# input: $LOCAL1/nanopore-unfilteredf-to-final.sam
-# output: $LOCAL1/nanopore-unfilteredf-to-final-sorted.bam
-$SAMTOOLS sort $LOCAL1/nanopore-unfilteredf-to-final.sam -o $LOCAL1/nanopore-unfilteredf-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-unfilteredf-to-final.sam
+# output: $POLISHING/nanopore-unfilteredf-to-final-sorted.bam
+$SAMTOOLS sort $POLISHING/nanopore-unfilteredf-to-final.sam -o $POLISHING/nanopore-unfilteredf-to-final-sorted.bam -@ $THREADS
 
 # index the sorted reads
-# input: $LOCAL1/nanopore-unfilteredf-to-final-sorted.bam
-# output: $LOCAL1/nanopore-unfilteredf-to-final-sorted.bam.bai
-$SAMTOOLS index $LOCAL1/nanopore-unfilteredf-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-unfilteredf-to-final-sorted.bam
+# output: $POLISHING/nanopore-unfilteredf-to-final-sorted.bam.bai
+$SAMTOOLS index $POLISHING/nanopore-unfilteredf-to-final-sorted.bam -@ $THREADS
 
 # sort the unfiltered-reverse nanopore reads
-# input: $LOCAL1/nanopore-unfilteredr-to-final.sam
-# output: $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam
-$SAMTOOLS sort $LOCAL1/nanopore-unfilteredr-to-final.sam -o $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-unfilteredr-to-final.sam
+# output: $POLISHING/nanopore-unfilteredr-to-final-sorted.bam
+$SAMTOOLS sort $POLISHING/nanopore-unfilteredr-to-final.sam -o $POLISHING/nanopore-unfilteredr-to-final-sorted.bam -@ $THREADS
 
 # index the sorted reads
-# input: $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam
-# output: $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam.bai
-$SAMTOOLS index $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-unfilteredr-to-final-sorted.bam
+# output: $POLISHING/nanopore-unfilteredr-to-final-sorted.bam.bai
+$SAMTOOLS index $POLISHING/nanopore-unfilteredr-to-final-sorted.bam -@ $THREADS
 
 
 
 # sort the filtered-forward nanopore reads
-# input: $LOCAL1/nanopore-filteredf-to-final.sam
-# output: $LOCAL1/nanopore-filtered-to-final-sorted.bam
-$SAMTOOLS sort $LOCAL1/nanopore-filteredf-to-final.sam -o $LOCAL1/nanopore-filteredf-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-filteredf-to-final.sam
+# output: $POLISHING/nanopore-filtered-to-final-sorted.bam
+$SAMTOOLS sort $POLISHING/nanopore-filteredf-to-final.sam -o $POLISHING/nanopore-filteredf-to-final-sorted.bam -@ $THREADS
 
 # index the sorted reads
-# input: $LOCAL1/nanopore-filteredf-to-final-sorted.bam
-# output: $LOCAL1/nanopore-filteredf-to-final-sorted.bam.bai
-$SAMTOOLS index $LOCAL1/nanopore-filteredf-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-filteredf-to-final-sorted.bam
+# output: $POLISHING/nanopore-filteredf-to-final-sorted.bam.bai
+$SAMTOOLS index $POLISHING/nanopore-filteredf-to-final-sorted.bam -@ $THREADS
 
 # sort the filtered-reverse nanopore reads
-# input: $LOCAL1/nanopore-filteredr-to-final.sam
-# output: $LOCAL1/nanopore-filteredr-to-final-sorted.bam
-$SAMTOOLS sort $LOCAL1/nanopore-filteredr-to-final.sam -o $LOCAL1/nanopore-filteredr-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-filteredr-to-final.sam
+# output: $POLISHING/nanopore-filteredr-to-final-sorted.bam
+$SAMTOOLS sort $POLISHING/nanopore-filteredr-to-final.sam -o $POLISHING/nanopore-filteredr-to-final-sorted.bam -@ $THREADS
 
 # index the sorted reads
-# input: $LOCAL1/nanopore-filteredr-to-final-sorted.bam
-# output: $LOCAL1/nanopore-filteredr-to-final-sorted.bam.bai
-$SAMTOOLS index $LOCAL1/nanopore-filteredr-to-final-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-filteredr-to-final-sorted.bam
+# output: $POLISHING/nanopore-filteredr-to-final-sorted.bam.bai
+$SAMTOOLS index $POLISHING/nanopore-filteredr-to-final-sorted.bam -@ $THREADS
 
 
 
 
 # create a fasta index for proper header generation after extracting specific regional reads
-# input: $LOCAL1/all-reverse-start.fasta
-# output: $LOCAL1/all-reverse-start.fasta.fai
-$SAMTOOLS faidx $LOCAL1/all-reverse-start.fasta
+# input: $POLISHING/all-reverse-start.fasta
+# output: $POLISHING/all-reverse-start.fasta.fai
+$SAMTOOLS faidx $POLISHING/all-reverse-start.fasta
 
 # create a fasta index for proper header generation after extracting specific regional reads
-# input: $LOCAL1/all-oriented.fasta
-# output: $LOCAL1/all-oriented.fasta.fai
-$SAMTOOLS faidx $LOCAL1/all-oriented.fasta
+# input: $POLISHING/all-oriented.fasta
+# output: $POLISHING/all-oriented.fasta.fai
+$SAMTOOLS faidx $POLISHING/all-oriented.fasta
 
 
 
 # extract the "soft" mapped reads
-# input: $LOCAL1/illumina-to-final.sam
-# output: $LOCAL1/illumina-to-final-soft.bam
-$SAMTOOLS view -@ $THREADS -f 2 -F 256 -bS $LOCAL1/illumina-to-final.sam > $LOCAL1/illumina-to-final-soft.bam
+# input: $POLISHING/illumina-to-final.sam
+# output: $POLISHING/illumina-to-final-soft.bam
+$SAMTOOLS view -@ $THREADS -f 2 -F 256 -bS $POLISHING/illumina-to-final.sam > $POLISHING/illumina-to-final-soft.bam
 
 # sort the extracted soft reads
-# input: $LOCAL1/illumina-to-final-soft.bam
-# output: $LOCAL1/illumina-to-final-soft-sorted.bam
-$SAMTOOLS sort $LOCAL1/illumina-to-final-soft.bam -o $LOCAL1/illumina-to-final-soft-sorted.bam -@ $THREADS
+# input: $POLISHING/illumina-to-final-soft.bam
+# output: $POLISHING/illumina-to-final-soft-sorted.bam
+$SAMTOOLS sort $POLISHING/illumina-to-final-soft.bam -o $POLISHING/illumina-to-final-soft-sorted.bam -@ $THREADS
 
 # index the sorted reads
-# input: $LOCAL1/nanopore-filtered-to-final-sorted.bam
-# output: $LOCAL1/nanopore-filtered-to-final-sorted.bam.bai
-$SAMTOOLS index $LOCAL1/illumina-to-final-soft-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-filtered-to-final-sorted.bam
+# output: $POLISHING/nanopore-filtered-to-final-sorted.bam.bai
+$SAMTOOLS index $POLISHING/illumina-to-final-soft-sorted.bam -@ $THREADS
 
 # use more stringent filtering parameters from the illumina alignment against the final assembly in preparation for depth determining
-# input: $LOCAL1/illumina-to-final.sam
-# output: $LOCAL1/illumina-to-final-hard.bam 
-$SAMTOOLS view -@ $THREADS -bS -f 2 -F 3848 $LOCAL1/illumina-to-final.sam > $LOCAL1/illumina-to-final-hard.bam
+# input: $POLISHING/illumina-to-final.sam
+# output: $POLISHING/illumina-to-final-hard.bam 
+$SAMTOOLS view -@ $THREADS -bS -f 2 -F 3848 $POLISHING/illumina-to-final.sam > $POLISHING/illumina-to-final-hard.bam
 
 # sort the extracted hard reads
-# input: $LOCAL1/illumina-to-final-hard.bam
-# output: $LOCAL1/illumina-to-final-hard-sorted.bam
-$SAMTOOLS sort $LOCAL1/illumina-to-final-hard.bam -o $LOCAL1/illumina-to-final-hard-sorted.bam -@ $THREADS
+# input: $POLISHING/illumina-to-final-hard.bam
+# output: $POLISHING/illumina-to-final-hard-sorted.bam
+$SAMTOOLS sort $POLISHING/illumina-to-final-hard.bam -o $POLISHING/illumina-to-final-hard-sorted.bam -@ $THREADS
 
 # index the sorted reads
-# input: $LOCAL1/nanopore-filtered-to-final-hard-sorted.bam
-# output: $LOCAL1/nanopore-filtered-to-final-sorted.bam.bai
-$SAMTOOLS index $LOCAL1/illumina-to-final-hard-sorted.bam -@ $THREADS
+# input: $POLISHING/nanopore-filtered-to-final-hard-sorted.bam
+# output: $POLISHING/nanopore-filtered-to-final-sorted.bam.bai
+$SAMTOOLS index $POLISHING/illumina-to-final-hard-sorted.bam -@ $THREADS
 
 # create a fasta index for proper header generation after extracting specific regional reads
-# input: $LOCAL1/all-oriented.fasta
-# output: $LOCAL1/all-oriented.fasta.fai
-$SAMTOOLS faidx $LOCAL1/all-oriented.fasta
+# input: $POLISHING/all-oriented.fasta
+# output: $POLISHING/all-oriented.fasta.fai
+$SAMTOOLS faidx $POLISHING/all-oriented.fasta
 
 for name in $MAGS
 do
 
 # collect the relevant illumina reads
-# input: $LOCAL1/illumina-to-final-soft-sorted.bam
-# input: $LOCAL1/illumina-to-final-soft-sorted.bam.bai
-# input: $LOCAL1/all-oriented.fasta.fai
-# output: $LOCAL/$name/illumina-to-final-soft.bam
-$SAMTOOLS view $LOCAL1/illumina-to-final-soft-sorted.bam $name -o $LOCAL/$name/illumina-to-final-soft.bam -T $LOCAL1/all-oriented.fasta -@ $THREADS
+# input: $POLISHING/illumina-to-final-soft-sorted.bam
+# input: $POLISHING/illumina-to-final-soft-sorted.bam.bai
+# input: $POLISHING/all-oriented.fasta.fai
+# output: $MASTERDIR/$name/illumina-to-final-soft.bam
+$SAMTOOLS view $POLISHING/illumina-to-final-soft-sorted.bam $name -o $MASTERDIR/$name/illumina-to-final-soft.bam -T $POLISHING/all-oriented.fasta -@ $THREADS
 
 
-# input: $LOCAL1/nanopore-filteredf-to-final-sorted.bam
-# input: $LOCAL1/nanopore-filteredf-to-final-sorted.bam.bai
-# input: $LOCAL1/all-oriented.fasta.fai
-# output: $LOCAL/$name/nanopore-filtered-to-final-forward.bam
-$SAMTOOLS view $LOCAL1/nanopore-filteredf-to-final-sorted.bam $name -o $LOCAL/$name/nanopore-filtered-to-final-forward.bam -T $LOCAL1/all-oriented.fasta -@ $THREADS
-# input: $LOCAL1/nanopore-filteredr-to-final-sorted.bam
-# input: $LOCAL1/nanopore-filteredr-to-final-sorted.bam.bai
-# input: $LOCAL1/all-reverse-start.fasta.fai
-# output: $LOCAL/$name/nanopore-filtered-to-final-reverse.bam
-$SAMTOOLS view $LOCAL1/nanopore-filteredr-to-final-sorted.bam $name-reversed -o $LOCAL/$name/nanopore-filtered-to-final-reverse.bam -T $LOCAL1/all-reverse-start.fasta -@ $THREADS
+# input: $POLISHING/nanopore-filteredf-to-final-sorted.bam
+# input: $POLISHING/nanopore-filteredf-to-final-sorted.bam.bai
+# input: $POLISHING/all-oriented.fasta.fai
+# output: $MASTERDIR/$name/nanopore-filtered-to-final-forward.bam
+$SAMTOOLS view $POLISHING/nanopore-filteredf-to-final-sorted.bam $name -o $MASTERDIR/$name/nanopore-filtered-to-final-forward.bam -T $POLISHING/all-oriented.fasta -@ $THREADS
+# input: $POLISHING/nanopore-filteredr-to-final-sorted.bam
+# input: $POLISHING/nanopore-filteredr-to-final-sorted.bam.bai
+# input: $POLISHING/all-reverse-start.fasta.fai
+# output: $MASTERDIR/$name/nanopore-filtered-to-final-reverse.bam
+$SAMTOOLS view $POLISHING/nanopore-filteredr-to-final-sorted.bam $name-reversed -o $MASTERDIR/$name/nanopore-filtered-to-final-reverse.bam -T $POLISHING/all-reverse-start.fasta -@ $THREADS
 
 
 # sort the reads by position
-# input: $LOCAL/$name/nanopore-filtered-to-final-forward.bam
-# output: $LOCAL/$name/nanopore-filtered-to-final-forward-sorted.bam
-$SAMTOOLS sort -@ $THREADS $LOCAL/$name/nanopore-filtered-to-final-forward.bam -o $LOCAL/$name/nanopore-filtered-to-final-forward-sorted.bam
-# input: $LOCAL/$name/nanopore-filtered-to-final-reverse.bam
-# output: $LOCAL/$name/nanopore-filtered-to-final-reverse-sorted.bam
-$SAMTOOLS sort -@ $THREADS $LOCAL/$name/nanopore-filtered-to-final-reverse.bam -o $LOCAL/$name/nanopore-filtered-to-final-reverse-sorted.bam
+# input: $MASTERDIR/$name/nanopore-filtered-to-final-forward.bam
+# output: $MASTERDIR/$name/nanopore-filtered-to-final-forward-sorted.bam
+$SAMTOOLS sort -@ $THREADS $MASTERDIR/$name/nanopore-filtered-to-final-forward.bam -o $MASTERDIR/$name/nanopore-filtered-to-final-forward-sorted.bam
+# input: $MASTERDIR/$name/nanopore-filtered-to-final-reverse.bam
+# output: $MASTERDIR/$name/nanopore-filtered-to-final-reverse-sorted.bam
+$SAMTOOLS sort -@ $THREADS $MASTERDIR/$name/nanopore-filtered-to-final-reverse.bam -o $MASTERDIR/$name/nanopore-filtered-to-final-reverse-sorted.bam
 
 
 # sort the reads by name
-# input: $LOCAL/$name/illumina-to-final-soft.bam
-# output: $LOCAL/$name/illumina-to-final-soft-sorted-by-name.bam
-$SAMTOOLS sort -n -@ $THREADS $LOCAL/$name/illumina-to-final-soft.bam -o $LOCAL/$name/illumina-to-final-soft-sorted-by-name.bam
+# input: $MASTERDIR/$name/illumina-to-final-soft.bam
+# output: $MASTERDIR/$name/illumina-to-final-soft-sorted-by-name.bam
+$SAMTOOLS sort -n -@ $THREADS $MASTERDIR/$name/illumina-to-final-soft.bam -o $MASTERDIR/$name/illumina-to-final-soft-sorted-by-name.bam
 
 
 
 
 # convert the concatenated filtered bam file to fastq
-# input: $LOCAL/$name/nanopore-filtered-to-final-forward-sorted.bam
-# output: $LOCAL/$name/nanopore-filtered-to-final-forward.fastq
-$SAMTOOLS fastq $LOCAL/$name/nanopore-filtered-to-final-forward-sorted.bam > $LOCAL/$name/nanopore-filtered-to-final-forward.fastq -@ $THREADS
-# input: $LOCAL/$name/nanopore-filtered-to-final-reverse-sorted.bam
-# output: $LOCAL/$name/nanopore-filtered-to-final-reverse.fastq
-$SAMTOOLS fastq $LOCAL/$name/nanopore-filtered-to-final-reverse-sorted.bam > $LOCAL/$name/nanopore-filtered-to-final-reverse.fastq -@ $THREADS
+# input: $MASTERDIR/$name/nanopore-filtered-to-final-forward-sorted.bam
+# output: $MASTERDIR/$name/nanopore-filtered-to-final-forward.fastq
+$SAMTOOLS fastq $MASTERDIR/$name/nanopore-filtered-to-final-forward-sorted.bam > $MASTERDIR/$name/nanopore-filtered-to-final-forward.fastq -@ $THREADS
+# input: $MASTERDIR/$name/nanopore-filtered-to-final-reverse-sorted.bam
+# output: $MASTERDIR/$name/nanopore-filtered-to-final-reverse.fastq
+$SAMTOOLS fastq $MASTERDIR/$name/nanopore-filtered-to-final-reverse-sorted.bam > $MASTERDIR/$name/nanopore-filtered-to-final-reverse.fastq -@ $THREADS
 
 
 
 
 # concatenate the forward and reverse nanopore fastq files
-# input: $LOCAL/$name/nanopore-filtered-to-final-reverse.fastq
-# output: $LOCAL/$name/nanopore-filtered-to-final.fastq
-cat $LOCAL/$name/nanopore-filtered-to-final-reverse.fastq > $LOCAL/$name/nanopore-filtered-to-final.fastq
+# input: $MASTERDIR/$name/nanopore-filtered-to-final-reverse.fastq
+# output: $MASTERDIR/$name/nanopore-filtered-to-final.fastq
+cat $MASTERDIR/$name/nanopore-filtered-to-final-reverse.fastq > $MASTERDIR/$name/nanopore-filtered-to-final.fastq
 
 # get the read names mapping
-# input: $LOCAL/$name/nanopore-filtered-to-final-reverse.fastq
-# output: $LOCAL/$name/unique-read-names.txt
-grep "^@" $LOCAL/$name/nanopore-filtered-to-final-reverse.fastq > $LOCAL/$name/unique-read-names.txt
+# input: $MASTERDIR/$name/nanopore-filtered-to-final-reverse.fastq
+# output: $MASTERDIR/$name/unique-read-names.txt
+grep "^@" $MASTERDIR/$name/nanopore-filtered-to-final-reverse.fastq > $MASTERDIR/$name/unique-read-names.txt
 
 # concatenate reads that are not found in the fastq already to the fastq
-# input: $LOCAL/$name/unique-read-names.txt
-# input: $LOCAL/$name/nanopore-filtered-to-final-forward.fastq
-# output: $LOCAL/$name/nanopore-filtered-to-final.fastq
-awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $LOCAL/$name/unique-read-names.txt $LOCAL/$name/nanopore-filtered-to-final-forward.fastq | grep -v -A 3 -f - >> $LOCAL/$name/nanopore-filtered-to-final.fastq
+# input: $MASTERDIR/$name/unique-read-names.txt
+# input: $MASTERDIR/$name/nanopore-filtered-to-final-forward.fastq
+# output: $MASTERDIR/$name/nanopore-filtered-to-final.fastq
+awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $MASTERDIR/$name/unique-read-names.txt $MASTERDIR/$name/nanopore-filtered-to-final-forward.fastq | grep -v -A 3 -f - >> $MASTERDIR/$name/nanopore-filtered-to-final.fastq
 
 
 
 # separate the reads into forward and reverse types (could have used bam2fastq, still required a sorted bam file)
-# input: $LOCAL/$name/illumina-to-final-soft-sorted-by-name.bam
-# output: $LOCAL/$name/illumina-soft-paired1.fq
-# output: $LOCAL/$name/illumina-soft-paired2.fq
-$SAMTOOLS fastq -1 $LOCAL/$name/illumina-soft-paired1.fq -2 $LOCAL/$name/illumina-soft-paired2.fq -0 /dev/null -s /dev/null -n $LOCAL/$name/illumina-to-final-soft-sorted-by-name.bam -@ $THREADS
+# input: $MASTERDIR/$name/illumina-to-final-soft-sorted-by-name.bam
+# output: $MASTERDIR/$name/illumina-soft-paired1.fq
+# output: $MASTERDIR/$name/illumina-soft-paired2.fq
+$SAMTOOLS fastq -1 $MASTERDIR/$name/illumina-soft-paired1.fq -2 $MASTERDIR/$name/illumina-soft-paired2.fq -0 /dev/null -s /dev/null -n $MASTERDIR/$name/illumina-to-final-soft-sorted-by-name.bam -@ $THREADS
 
 
 
@@ -719,61 +719,61 @@ do
 source /Volumes/data/bin/miniconda3/bin/activate
 
 # reassemble using flye not in meta mode with the subset of nanopore reads filtered from the mapping against the final assembly
-# input: $LOCAL/$name/nanopore-filtered-to-final.fastq
-# output dir: $LOCAL2/$name/flye/ has multiple files
-flye --nano-raw $LOCAL/$name/nanopore-filtered-to-final.fastq --threads $THREADS -g 5m -o $LOCAL2/$name/flye/
+# input: $MASTERDIR/$name/nanopore-filtered-to-final.fastq
+# output dir: $ASSEMBLIES/$name/flye/ has multiple files
+flye --nano-raw $MASTERDIR/$name/nanopore-filtered-to-final.fastq --threads $THREADS -g 5m -o $ASSEMBLIES/$name/flye/
 
 # move the contigs fasta file and assembly info file to up two directories
-# input: $LOCAL2/$name/flye/assembly.fasta
-# output: $LOCAL2/$name-flye-assembly.fasta
-mv $LOCAL2/$name/flye/assembly.fasta $LOCAL2/$name-flye-assembly.fasta
-# input: $LOCAL2/$name/flye/assembly_info.txt
-# output: $LOCAL2/$name-flye.log
-mv $LOCAL2/$name/flye/assembly_info.txt $LOCAL2/$name-flye.log
+# input: $ASSEMBLIES/$name/flye/assembly.fasta
+# output: $ASSEMBLIES/$name-flye-assembly.fasta
+mv $ASSEMBLIES/$name/flye/assembly.fasta $ASSEMBLIES/$name-flye-assembly.fasta
+# input: $ASSEMBLIES/$name/flye/assembly_info.txt
+# output: $ASSEMBLIES/$name-flye.log
+mv $ASSEMBLIES/$name/flye/assembly_info.txt $ASSEMBLIES/$name-flye.log
 
 conda deactivate
 
 # assemble with unicycler hybrid assembly
-# input: $LOCAL/$name/nanopore-filtered-to-final.fastq
-# input: $LOCAL/$name/illumina-soft-paired1.fq
-# input: $LOCAL/$name/illumina-soft-paired2.fq
-# output dir: $LOCAL2/$name/unicycler/ multiple unicycler files
-/usr/bin/python3.6 $UNICYCLER -t $THREADS -1 $LOCAL/$name/illumina-soft-paired1.fq -2 $LOCAL/$name/illumina-soft-paired2.fq -l $LOCAL/$name/nanopore-filtered-to-final.fastq -o $LOCAL2/$name/unicycler/ --no_pilon
+# input: $MASTERDIR/$name/nanopore-filtered-to-final.fastq
+# input: $MASTERDIR/$name/illumina-soft-paired1.fq
+# input: $MASTERDIR/$name/illumina-soft-paired2.fq
+# output dir: $ASSEMBLIES/$name/unicycler/ multiple unicycler files
+/usr/bin/python3.6 $UNICYCLER -t $THREADS -1 $MASTERDIR/$name/illumina-soft-paired1.fq -2 $MASTERDIR/$name/illumina-soft-paired2.fq -l $MASTERDIR/$name/nanopore-filtered-to-final.fastq -o $ASSEMBLIES/$name/unicycler/ --no_pilon
 
 # move the relevant files up two directories
-# input: $LOCAL2/$name/unicycler/assembly.fasta
-# output: $LOCAL2/$name-unicycler-assembly.fasta
-mv $LOCAL2/$name/unicycler/assembly.fasta $LOCAL2/$name-unicycler-assembly.fasta
-# input: $LOCAL2/$name/unicycler/unicycler.log
-# output: $LOCAL2/$name-unicycler.log
-mv $LOCAL2/$name/unicycler/unicycler.log $LOCAL2/$name-unicycler.log
+# input: $ASSEMBLIES/$name/unicycler/assembly.fasta
+# output: $ASSEMBLIES/$name-unicycler-assembly.fasta
+mv $ASSEMBLIES/$name/unicycler/assembly.fasta $ASSEMBLIES/$name-unicycler-assembly.fasta
+# input: $ASSEMBLIES/$name/unicycler/unicycler.log
+# output: $ASSEMBLIES/$name-unicycler.log
+mv $ASSEMBLIES/$name/unicycler/unicycler.log $ASSEMBLIES/$name-unicycler.log
 
 # reassemble using unicycler long-read assembly 
-# input: $LOCAL/$name/nanopore-filtered-to-final.fastq
-# output dir: $LOCAL2/$name/unicycler-long multiple unicycler long read files
-/usr/bin/python3.6 $UNICYCLER -t $THREADS -l $LOCAL/$name/nanopore-filtered-to-final.fastq -o $LOCAL2/$name/unicycler-long --no_pilon
+# input: $MASTERDIR/$name/nanopore-filtered-to-final.fastq
+# output dir: $ASSEMBLIES/$name/unicycler-long multiple unicycler long read files
+/usr/bin/python3.6 $UNICYCLER -t $THREADS -l $MASTERDIR/$name/nanopore-filtered-to-final.fastq -o $ASSEMBLIES/$name/unicycler-long --no_pilon
 
 # move the relevant files up two directories
-# input: $LOCAL2/$name/unicycler-long/assembly.fasta
-# output: $LOCAL2/$name-unicycler-long-assembly.fasta
-mv $LOCAL2/$name/unicycler-long/assembly.fasta $LOCAL2/$name-unicycler-long-assembly.fasta
-# input: $LOCAL2/$name/unicycler-long/unicycler.log
-# output: $LOCAL2/$name-unicycler-long.log
-mv $LOCAL2/$name/unicycler-long/unicycler.log $LOCAL2/$name-unicycler-long.log
+# input: $ASSEMBLIES/$name/unicycler-long/assembly.fasta
+# output: $ASSEMBLIES/$name-unicycler-long-assembly.fasta
+mv $ASSEMBLIES/$name/unicycler-long/assembly.fasta $ASSEMBLIES/$name-unicycler-long-assembly.fasta
+# input: $ASSEMBLIES/$name/unicycler-long/unicycler.log
+# output: $ASSEMBLIES/$name-unicycler-long.log
+mv $ASSEMBLIES/$name/unicycler-long/unicycler.log $ASSEMBLIES/$name-unicycler-long.log
 
 # assemble with spades
-# input: $LOCAL/$name/$name-illumina-soft-paired1.fq
-# input: $LOCAL/$name/$name-illumina-soft-paired2.fq
-# output dir: $LOCAL2/$name/spades multiple spades assembly files
-$SPADES -1 $LOCAL/$name/illumina-soft-paired1.fq -2 $LOCAL/$name/illumina-soft-paired2.fq --careful -t $THREADS -o $LOCAL2/$name/spades 
+# input: $MASTERDIR/$name/$name-illumina-soft-paired1.fq
+# input: $MASTERDIR/$name/$name-illumina-soft-paired2.fq
+# output dir: $ASSEMBLIES/$name/spades multiple spades assembly files
+$SPADES -1 $MASTERDIR/$name/illumina-soft-paired1.fq -2 $MASTERDIR/$name/illumina-soft-paired2.fq --careful -t $THREADS -o $ASSEMBLIES/$name/spades 
 
 # move the relevant information up two directories
-# input: $LOCAL2/$name/spades/contigs.fasta
-# output: $LOCAL2/$name-spades-assembly.fasta 
-mv $LOCAL2/$name/spades/contigs.fasta $LOCAL2/$name-spades-assembly.fasta 
-# input: $LOCAL2/$name/spades/spades.log
-# output: $LOCAL2/$name-spades.log
-mv $LOCAL2/$name/spades/spades.log $LOCAL2/$name-spades.log
+# input: $ASSEMBLIES/$name/spades/contigs.fasta
+# output: $ASSEMBLIES/$name-spades-assembly.fasta 
+mv $ASSEMBLIES/$name/spades/contigs.fasta $ASSEMBLIES/$name-spades-assembly.fasta 
+# input: $ASSEMBLIES/$name/spades/spades.log
+# output: $ASSEMBLIES/$name-spades.log
+mv $ASSEMBLIES/$name/spades/spades.log $ASSEMBLIES/$name-spades.log
 
 
 done
@@ -803,14 +803,14 @@ for name in $MAGS
 do
 
 # create dot plot(s) for the given genome
-# input: $LOCAL2/$name-flye-assembly.fasta
-# input: $LOCAL/$name/$name-final-assembly.fasta
+# input: $ASSEMBLIES/$name-flye-assembly.fasta
+# input: $MASTERDIR/$name/$name-final-assembly.fasta
 # output: 
-# output dir: $LOCAL4/$name has various files (not used again)
+# output dir: $DOTPLOTS/$name has various files (not used again)
 # requires: dot-plot2.py
-./dot-plot2.py $name $LOCAL4 $SMALLPLOTS $LOCAL2/$name-flye-assembly.fasta $LOCAL/$name/$name-final-assembly.fasta
+./dot-plot2.py $name $DOTPLOTS $SMALLPLOTS $ASSEMBLIES/$name-flye-assembly.fasta $MASTERDIR/$name/$name-final-assembly.fasta
 
-mv $LOCAL4/$name $LOCAL/output/dotplots
+mv $DOTPLOTS/$name $MASTERDIR/output/dotplots
 
 done
 
@@ -845,46 +845,46 @@ echo Dot plots made
 source /Volumes/data/bin/miniconda3/bin/activate
 
 # calculate the depth over a 1000 base window using mapped unfiltered and filtered for reverse reads for nanopore
-# input: $LOCAL1/$name/nanopore-filtered-to-final-forward-sorted.bam.bai
-# output (multiple files; relevant ones provided): $LOCAL1/nanopore-filteredf1.regions.bed.gz
-mosdepth -b 1000 $LOCAL1/nanopore-filteredf1 $LOCAL1/nanopore-filteredf-to-final-sorted.bam
-# input: $LOCAL/$name/nanopore-unfiltered-to-final-forward-sorted.bam.bai
-# output (multiple files; relevant ones provided): $LOCAL1/nanopore-unfilteredf1.regions.bed.gz
-mosdepth -b 1000 $LOCAL1/nanopore-unfilteredf1 $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam
-# input: $LOCAL1/nanopore-filteredr-to-final-sorted.bam.bai
-# output (multiple files; relevant ones provided): $LOCAL1/nanopore-filteredr1.regions.bed.gz
-mosdepth -b 1000 $LOCAL1/nanopore-filteredr1 $LOCAL1/nanopore-filteredr-to-final-sorted.bam
-# input: $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam.bai
-# output (multiple files; relevant ones provided): $LOCAL1/nanopore-unfilteredr1.regions.bed.gz
-mosdepth -b 1000 $LOCAL1/nanopore-unfilteredr1 $LOCAL1/nanopore-unfilteredr-to-final-sorted.bam
+# input: $POLISHING/$name/nanopore-filtered-to-final-forward-sorted.bam.bai
+# output (multiple files; relevant ones provided): $POLISHING/nanopore-filteredf1.regions.bed.gz
+mosdepth -b 1000 $POLISHING/nanopore-filteredf1 $POLISHING/nanopore-filteredf-to-final-sorted.bam
+# input: $MASTERDIR/$name/nanopore-unfiltered-to-final-forward-sorted.bam.bai
+# output (multiple files; relevant ones provided): $POLISHING/nanopore-unfilteredf1.regions.bed.gz
+mosdepth -b 1000 $POLISHING/nanopore-unfilteredf1 $POLISHING/nanopore-unfilteredr-to-final-sorted.bam
+# input: $POLISHING/nanopore-filteredr-to-final-sorted.bam.bai
+# output (multiple files; relevant ones provided): $POLISHING/nanopore-filteredr1.regions.bed.gz
+mosdepth -b 1000 $POLISHING/nanopore-filteredr1 $POLISHING/nanopore-filteredr-to-final-sorted.bam
+# input: $POLISHING/nanopore-unfilteredr-to-final-sorted.bam.bai
+# output (multiple files; relevant ones provided): $POLISHING/nanopore-unfilteredr1.regions.bed.gz
+mosdepth -b 1000 $POLISHING/nanopore-unfilteredr1 $POLISHING/nanopore-unfilteredr-to-final-sorted.bam
 
 # calculate the depth over a 1000 base window using mapped illumina reads
-# input: $LOCAL1/illumina-to-final-soft-sorted.bam.bai
-# output (multiple files; relevant ones provided): $LOCAL1/illumina-soft1.regions.bed.gz
-mosdepth -b 1000 $LOCAL1/illumina-soft1 $LOCAL1/illumina-to-final-soft-sorted.bam
-# input: $LOCAL1/illumina-to-final-hard-sorted.bam.bai
-# output (multiple files; relevant ones provided): $LOCAL1/illumina-hard1.regions.bed.gz
-mosdepth -b 1000 $LOCAL1/illumina-hard1 $LOCAL1/illumina-to-final-hard-sorted.bam
+# input: $POLISHING/illumina-to-final-soft-sorted.bam.bai
+# output (multiple files; relevant ones provided): $POLISHING/illumina-soft1.regions.bed.gz
+mosdepth -b 1000 $POLISHING/illumina-soft1 $POLISHING/illumina-to-final-soft-sorted.bam
+# input: $POLISHING/illumina-to-final-hard-sorted.bam.bai
+# output (multiple files; relevant ones provided): $POLISHING/illumina-hard1.regions.bed.gz
+mosdepth -b 1000 $POLISHING/illumina-hard1 $POLISHING/illumina-to-final-hard-sorted.bam
 
 # it outputs in a gzipped bed file, so unzip
-# input: $LOCAL1/nanopore-filteredf1.regions.bed.gz
-# output: $LOCAL1/nanopore-filteredf1.regions.bed
-gunzip $LOCAL1/nanopore-filteredf1.regions.bed.gz
-# input: $LOCAL1/nanopore-unfilteredf1.regions.bed.gz
-# output: $LOCAL1/nanopore-unfilteredf1.regions.bed
-gunzip $LOCAL1/nanopore-unfilteredf1.regions.bed.gz
-# input: $LOCAL1/nanopore-filteredr1.regions.bed.gz
-# output: $LOCAL1/nanopore-filteredr1.regions.bed
-gunzip $LOCAL1/nanopore-filteredr1.regions.bed.gz
-# input: $LOCAL1/nanopore-unfilteredr1.regions.bed.gz
-# output: $LOCAL1/nanopore-unfilteredr1.regions.bed
-gunzip $LOCAL1/nanopore-unfilteredr1.regions.bed.gz
-# input: $LOCAL1/illumina-soft1.regions.bed.gz
-# output: $LOCAL1/illumina-soft1.regions.bed
-gunzip $LOCAL1/illumina-soft1.regions.bed.gz
-# input: $LOCAL1/illumina-hard1.regions.bed.gz
-# output: $LOCAL1/illumina-hard1.regions.bed
-gunzip $LOCAL1/illumina-hard1.regions.bed.gz
+# input: $POLISHING/nanopore-filteredf1.regions.bed.gz
+# output: $POLISHING/nanopore-filteredf1.regions.bed
+gunzip $POLISHING/nanopore-filteredf1.regions.bed.gz
+# input: $POLISHING/nanopore-unfilteredf1.regions.bed.gz
+# output: $POLISHING/nanopore-unfilteredf1.regions.bed
+gunzip $POLISHING/nanopore-unfilteredf1.regions.bed.gz
+# input: $POLISHING/nanopore-filteredr1.regions.bed.gz
+# output: $POLISHING/nanopore-filteredr1.regions.bed
+gunzip $POLISHING/nanopore-filteredr1.regions.bed.gz
+# input: $POLISHING/nanopore-unfilteredr1.regions.bed.gz
+# output: $POLISHING/nanopore-unfilteredr1.regions.bed
+gunzip $POLISHING/nanopore-unfilteredr1.regions.bed.gz
+# input: $POLISHING/illumina-soft1.regions.bed.gz
+# output: $POLISHING/illumina-soft1.regions.bed
+gunzip $POLISHING/illumina-soft1.regions.bed.gz
+# input: $POLISHING/illumina-hard1.regions.bed.gz
+# output: $POLISHING/illumina-hard1.regions.bed
+gunzip $POLISHING/illumina-hard1.regions.bed.gz
 
 
 # apply to each genome
@@ -892,50 +892,50 @@ for name in $MAGS
 do
 
 # collect only the relevant genome
-# input: $LOCAL1/nanopore-filteredf1.regions.bed
-# output: $LOCAL/$name/circos/$name-nanopore-filteredf.regions.bed
-grep $name $LOCAL1/nanopore-filteredf1.regions.bed > $LOCAL/$name/circos/$name-nanopore-filteredf.regions.bed
-# input: $LOCAL1/nanopore-unfilteredf1.regions.bed
-# output: $LOCAL/$name/circos/$name-nanopore-unfilteredf.regions.bed
-grep $name $LOCAL1/nanopore-unfilteredf1.regions.bed > $LOCAL/$name/circos/$name-nanopore-unfilteredf.regions.bed
-# input: $LOCAL1/nanopore-filteredr1.regions.bed
-# output: $LOCAL/$name/circos/$name-nanopore-filteredr.regions.bed
-grep $name $LOCAL1/nanopore-filteredr1.regions.bed > $LOCAL/$name/circos/$name-nanopore-filteredr.regions.bed
-# input: $LOCAL1/nanopore-unfilteredr1.regions.bed
-# output: $LOCAL/$name/circos/$name-nanopore-unfilteredr.regions.bed
-grep $name $LOCAL1/nanopore-unfilteredr1.regions.bed > $LOCAL/$name/circos/$name-nanopore-unfilteredr.regions.bed
+# input: $POLISHING/nanopore-filteredf1.regions.bed
+# output: $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed
+grep $name $POLISHING/nanopore-filteredf1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed
+# input: $POLISHING/nanopore-unfilteredf1.regions.bed
+# output: $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed
+grep $name $POLISHING/nanopore-unfilteredf1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed
+# input: $POLISHING/nanopore-filteredr1.regions.bed
+# output: $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed
+grep $name $POLISHING/nanopore-filteredr1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed
+# input: $POLISHING/nanopore-unfilteredr1.regions.bed
+# output: $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed
+grep $name $POLISHING/nanopore-unfilteredr1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed
 
-# input: $LOCAL1/illumina-soft1.regions.bed
-# output: $LOCAL/$name/circos/$name-illumina-soft.regions.bed
-grep $name $LOCAL1/illumina-soft1.regions.bed > $LOCAL/$name/circos/$name-illumina-soft.regions.bed
-# input: $LOCAL1/illumina-hard1.regions.bed
-# output: $LOCAL/$name/circos/$name-illumina-hard.regions.bed
-grep $name $LOCAL1/illumina-hard1.regions.bed > $LOCAL/$name/circos/$name-illumina-hard.regions.bed
+# input: $POLISHING/illumina-soft1.regions.bed
+# output: $MASTERDIR/$name/circos/$name-illumina-soft.regions.bed
+grep $name $POLISHING/illumina-soft1.regions.bed > $MASTERDIR/$name/circos/$name-illumina-soft.regions.bed
+# input: $POLISHING/illumina-hard1.regions.bed
+# output: $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed
+grep $name $POLISHING/illumina-hard1.regions.bed > $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed
 
 # modify the unfiltered.regions.bed and filtered.regions.bed files to include accurate measurements
-# input: $LOCAL/$name/circos/$name-nanopore-filteredf.regions.bed
-# input: $LOCAL/$name/circos/$name-nanopore-unfilteredf.regions.bed
-# input: $LOCAL/$name/circos/$name-nanopore-filteredr.regions.bed
-# input: $LOCAL/$name/circos/$name-nanopore-unfilteredr.regions.bed
-# input: $LOCAL/$name/$name-final-assembly-oriented.fasta
-# output: $LOCAL/$name/circos/$name-nanopore-unfiltered.regions.bed
-# output: $LOCAL/$name/circos/$name-nanopore-filtered.regions.bed
+# input: $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed
+# input: $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed
+# input: $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed
+# input: $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed
+# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
+# output: $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed
+# output: $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed
 # requires: modify-nanopore-bed-v2.py
-./modify-nanopore-bed-v2.py $LOCAL/$name/circos/$name-nanopore-filtered.regions.bed $LOCAL/$name/circos/$name-nanopore-unfiltered.regions.bed $LOCAL/$name/circos/$name-nanopore-filteredf.regions.bed $LOCAL/$name/circos/$name-nanopore-unfilteredf.regions.bed $LOCAL/$name/circos/$name-nanopore-filteredr.regions.bed $LOCAL/$name/circos/$name-nanopore-unfilteredr.regions.bed $LOCAL/$name/$name-final-assembly-oriented.fasta $name
+./modify-nanopore-bed-v2.py $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name
 
 # generate length of genome
-# input: $LOCAL/$name/$name-final-assembly.fasta
-# output: $LOCAL/$name/circos/$name-final-length.txt
-awk '/^>/{if (l!="") l=0; next}{l+=length($0)}END{print l}' $LOCAL/$name/$name-final-assembly-oriented.fasta > $LOCAL/$name/circos/$name-final-length.txt
+# input: $MASTERDIR/$name/$name-final-assembly.fasta
+# output: $MASTERDIR/$name/circos/$name-final-length.txt
+awk '/^>/{if (l!="") l=0; next}{l+=length($0)}END{print l}' $MASTERDIR/$name/$name-final-assembly-oriented.fasta > $MASTERDIR/$name/circos/$name-final-length.txt
 
 # get length of genome
-# input: $LOCAL/$name/circos/$name-final-length.txt
+# input: $MASTERDIR/$name/circos/$name-final-length.txt
 # output: $length
-length=`cat $LOCAL/$name/circos/$name-final-length.txt`
+length=`cat $MASTERDIR/$name/circos/$name-final-length.txt`
 # generate cytoband file needed for circlize
 # input: $length
-# output: $LOCAL/$name/circos/$name-cytoband.txt
-echo -e "$name\t0\t$length\tnot_real\tnot_real" > $LOCAL/$name/circos/$name-cytoband.txt
+# output: $MASTERDIR/$name/circos/$name-cytoband.txt
+echo -e "$name\t0\t$length\tnot_real\tnot_real" > $MASTERDIR/$name/circos/$name-cytoband.txt
 
 # generate the required bed files from the .gff output.
 
@@ -943,53 +943,53 @@ echo -e "$name\t0\t$length\tnot_real\tnot_real" > $LOCAL/$name/circos/$name-cyto
 # i'm printing it into bed format, then printing "1" as a value file.
 
 # generate header for BED files for positive strand, negative strand, tRNA and rRNA
-# output: $LOCAL/$name/circos/$name-cds-positive.bed
-# output: $LOCAL/$name/circos/$name-cds-negative.bed
-# output: $LOCAL/$name/circos/$name-cds-trna.bed
-# output: $LOCAL/$name/circos/$name-cds-rrna.bed
-echo -e "chr\tstart\tend\tcds_pos" > $LOCAL/$name/circos/$name-cds-positive.bed
-echo -e "chr\tstart\tend\tcds_neg" > $LOCAL/$name/circos/$name-cds-negative.bed
-echo -e "chr\tstart\tend\ttrna" > $LOCAL/$name/circos/$name-cds-trna.bed
-echo -e "chr\tstart\tend\trrna" > $LOCAL/$name/circos/$name-cds-rrna.bed
+# output: $MASTERDIR/$name/circos/$name-cds-positive.bed
+# output: $MASTERDIR/$name/circos/$name-cds-negative.bed
+# output: $MASTERDIR/$name/circos/$name-cds-trna.bed
+# output: $MASTERDIR/$name/circos/$name-cds-rrna.bed
+echo -e "chr\tstart\tend\tcds_pos" > $MASTERDIR/$name/circos/$name-cds-positive.bed
+echo -e "chr\tstart\tend\tcds_neg" > $MASTERDIR/$name/circos/$name-cds-negative.bed
+echo -e "chr\tstart\tend\ttrna" > $MASTERDIR/$name/circos/$name-cds-trna.bed
+echo -e "chr\tstart\tend\trrna" > $MASTERDIR/$name/circos/$name-cds-rrna.bed
 
 # use tab separation (OFS arg)
 # coding sequences
-# input: $LOCAL/$name/circos/prokka/$name.gff
-# output: $LOCAL/$name/circos/$name-cds-positive.bed
-awk -v OFS='\t' '$3 ~ "CDS" && $7 ~ "+" {print $1, $4, $5, "1"}' $LOCAL/$name/circos/prokka/$name.gff >> $LOCAL/$name/circos/$name-cds-positive.bed
-# input: $LOCAL/$name/circos/prokka/$name.gff
-# output: $LOCAL/$name/circos/$name-cds-negative.bed
-awk -v OFS='\t' '$3 ~ "CDS" && $7 ~ "-" {print $1, $4, $5, "1"}' $LOCAL/$name/circos/prokka/$name.gff >> $LOCAL/$name/circos/$name-cds-negative.bed
+# input: $MASTERDIR/$name/circos/prokka/$name.gff
+# output: $MASTERDIR/$name/circos/$name-cds-positive.bed
+awk -v OFS='\t' '$3 ~ "CDS" && $7 ~ "+" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-positive.bed
+# input: $MASTERDIR/$name/circos/prokka/$name.gff
+# output: $MASTERDIR/$name/circos/$name-cds-negative.bed
+awk -v OFS='\t' '$3 ~ "CDS" && $7 ~ "-" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-negative.bed
 
 # get tRNA and rRNA gene loci
-# input: $LOCAL/$name/circos/prokka/$name.gff
+# input: $MASTERDIR/$name/circos/prokka/$name.gff
 # output: $name/${name}-cds-trna.bed
-awk -v OFS='\t' '$3 ~ "tRNA" {print $1, $4, $5, "1"}' $LOCAL/$name/circos/prokka/$name.gff >> $LOCAL/$name/circos/$name-cds-trna.bed
-# input: $LOCAL/$name/circos/prokka/$name.gff
-# output: $LOCAL/$name/circos/$name-cds-rrna.bed
-awk -v OFS='\t' '$3 ~ "rRNA" {print $1, $4, $5, "1"}' $LOCAL/$name/circos/prokka/$name.gff >> $LOCAL/$name/circos/$name-cds-rrna.bed
+awk -v OFS='\t' '$3 ~ "tRNA" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-trna.bed
+# input: $MASTERDIR/$name/circos/prokka/$name.gff
+# output: $MASTERDIR/$name/circos/$name-cds-rrna.bed
+awk -v OFS='\t' '$3 ~ "rRNA" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-rrna.bed
 
 # modify the bed files based on the positions of dnaa gene rarrangement and size of the genome
-# input: $LOCAL/$name/$name-orientation-shift.txt
-# input: $LOCAL/$name/circos/$name-cds-trna.bed
-# input: $LOCAL/$name/circos/$name-cds-rrna.bed
-# input: $LOCAL/$name/circos/$name-cds-positive.bed
-# input: $LOCAL/$name/circos/$name-cds-negative.bed
-# output: $LOCAL/$name/$name-orientation-shift.txt
-# output: $LOCAL/$name/circos/$name-cds-trna.bed
-# output: $LOCAL/$name/circos/$name-cds-rrna.bed
-# output: $LOCAL/$name/circos/$name-cds-positive.bed
-# output: $LOCAL/$name/circos/$name-cds-negative.bed
+# input: $MASTERDIR/$name/$name-orientation-shift.txt
+# input: $MASTERDIR/$name/circos/$name-cds-trna.bed
+# input: $MASTERDIR/$name/circos/$name-cds-rrna.bed
+# input: $MASTERDIR/$name/circos/$name-cds-positive.bed
+# input: $MASTERDIR/$name/circos/$name-cds-negative.bed
+# output: $MASTERDIR/$name/$name-orientation-shift.txt
+# output: $MASTERDIR/$name/circos/$name-cds-trna.bed
+# output: $MASTERDIR/$name/circos/$name-cds-rrna.bed
+# output: $MASTERDIR/$name/circos/$name-cds-positive.bed
+# output: $MASTERDIR/$name/circos/$name-cds-negative.bed
 # requires: bed-file-orientation.py
-./bed-file-orientation.py $LOCAL/$name/$name-orientation-shift.txt $LOCAL/$name/circos/$name-cds-trna.bed $LOCAL/$name/circos/$name-cds-rrna.bed $LOCAL/$name/circos/$name-cds-positive.bed $LOCAL/$name/circos/$name-cds-negative.bed
+./bed-file-orientation.py $MASTERDIR/$name/$name-orientation-shift.txt $MASTERDIR/$name/circos/$name-cds-trna.bed $MASTERDIR/$name/circos/$name-cds-rrna.bed $MASTERDIR/$name/circos/$name-cds-positive.bed $MASTERDIR/$name/circos/$name-cds-negative.bed
 
-mv $LOCAL/$name/circos/$name-cds* $LOCAL/output/circos
-mv $LOCAL/$name/circos/$name-gc* $LOCAL/output/circos
-mv $LOCAL/$name/circos/$name-cytoband.txt $LOCAL/output/circos
-mv $LOCAL/$name/circos/$name-illumina-hard.regions.bed $LOCAL/output/circos
-mv $LOCAL/$name/circos/$name-illumina-soft.regions.bed $LOCAL/output/circos
-mv $LOCAL/$name/circos/$name-nanopore-filtered.regions.bed $LOCAL/output/circos
-mv $LOCAL/$name/circos/$name-nanopore-unfiltered.regions.bed $LOCAL/output/circos
+mv $MASTERDIR/$name/circos/$name-cds* $MASTERDIR/output/circos
+mv $MASTERDIR/$name/circos/$name-gc* $MASTERDIR/output/circos
+mv $MASTERDIR/$name/circos/$name-cytoband.txt $MASTERDIR/output/circos
+mv $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed $MASTERDIR/output/circos
+mv $MASTERDIR/$name/circos/$name-illumina-soft.regions.bed $MASTERDIR/output/circos
+mv $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed $MASTERDIR/output/circos
+mv $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/output/circos
 
 done
 
@@ -1007,59 +1007,59 @@ for name in $MAGS
 do
 
 # create a file for illumina and nanopore total bp coverages
-# output: $LOCAL3/$name/$name-coverage.txt
-echo "$name average genome coverages" > $LOCAL3/$name/output/$name-coverage.txt
+# output: $ANVIOANNOTATIONS/$name/$name-coverage.txt
+echo "$name average genome coverages" > $ANVIOANNOTATIONS/$name/output/$name-coverage.txt
 
 # get illumina and nanopore total bp coverages
-# input: $LOCAL/$name/circos/$name-illumina-hard.regions.bed
-# output: $LOCAL3/$name/output/$name-coverage.txt
-awk '{sum+=$4} END { print "Illumina coverage\t",sum}' $LOCAL/output/circos/$name-illumina-hard.regions.bed >> $LOCAL3/$name/output/$name-coverage.txt
-# input: $LOCAL/$name/circos/$name-nanopore-filtered.regions.bed
-# output: $LOCAL3/$name/output/$name-coverage.txt
-awk '{sum+=$4} END { print "Nanopore coverage\t",sum}' $LOCAL/output/circos/$name-nanopore-filtered.regions.bed >> $LOCAL3/$name/output/$name-coverage.txt
+# input: $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed
+# output: $ANVIOANNOTATIONS/$name/output/$name-coverage.txt
+awk '{sum+=$4} END { print "Illumina coverage\t",sum}' $MASTERDIR/output/circos/$name-illumina-hard.regions.bed >> $ANVIOANNOTATIONS/$name/output/$name-coverage.txt
+# input: $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed
+# output: $ANVIOANNOTATIONS/$name/output/$name-coverage.txt
+awk '{sum+=$4} END { print "Nanopore coverage\t",sum}' $MASTERDIR/output/circos/$name-nanopore-filtered.regions.bed >> $ANVIOANNOTATIONS/$name/output/$name-coverage.txt
 
 # determine the number of tRNA in the genome
-# input: $LOCAL/$name/circos/prokka/$name.gff
-# output: $LOCAL3/$name/output/tRNA-number.txt
-awk -v OFS='\t' '$3 ~ "tRNA" {print $1, $4, $5, "1"}' $LOCAL/$name/circos/prokka/$name.gff | wc -l > $LOCAL3/$name/output/tRNA-number.txt
+# input: $MASTERDIR/$name/circos/prokka/$name.gff
+# output: $ANVIOANNOTATIONS/$name/output/tRNA-number.txt
+awk -v OFS='\t' '$3 ~ "tRNA" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff | wc -l > $ANVIOANNOTATIONS/$name/output/tRNA-number.txt
 
 # start anvio6 virtual environment
 source /Volumes/data/virtualenvs/anvio-6/bin/activate
 
 # copy the genome for annotating
-# input: $LOCAL/$name/$name-final-assembly-oriented.fasta
-# output: $LOCAL3/$name/$name-final-assembly-oriented.fasta
-cp $LOCAL/$name/$name-final-assembly-oriented.fasta $LOCAL3/$name/$name-final-assembly-oriented.fasta
+# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
+# output: $ANVIOANNOTATIONS/$name/$name-final-assembly-oriented.fasta
+cp $MASTERDIR/$name/$name-final-assembly-oriented.fasta $ANVIOANNOTATIONS/$name/$name-final-assembly-oriented.fasta
 
 # generate a contigs database of the final genome assembly using anvio
-# input: $LOCAL3/$name/$name-final-assembly-oriented.fasta
-# output: $LOCAL3/$name/$name-annotation.db
-anvi-gen-contigs-database -f $LOCAL3/$name/$name-final-assembly-oriented.fasta -n $name-validation-annotation -o $LOCAL3/$name/$name-annotation.db
+# input: $ANVIOANNOTATIONS/$name/$name-final-assembly-oriented.fasta
+# output: $ANVIOANNOTATIONS/$name/$name-annotation.db
+anvi-gen-contigs-database -f $ANVIOANNOTATIONS/$name/$name-final-assembly-oriented.fasta -n $name-validation-annotation -o $ANVIOANNOTATIONS/$name/$name-annotation.db
 
 ##############
 ##THE FOLLOWING FUNCTIONS MUST BE RUN IN ORDER
 # run hmms on the database (no longer automatic in anvio-6)
-# input: $LOCAL/$name/$name-annotation.db
-anvi-run-hmms -T $THREADS -c $LOCAL3/$name/$name-annotation.db
+# input: $MASTERDIR/$name/$name-annotation.db
+anvi-run-hmms -T $THREADS -c $ANVIOANNOTATIONS/$name/$name-annotation.db
 
 # affiliate single copy gene taxonomies 
-# input: $LOCAL/$name/$name-annotation.db
-anvi-run-scg-taxonomy -T $THREADS -c $LOCAL3/$name/$name-annotation.db
+# input: $MASTERDIR/$name/$name-annotation.db
+anvi-run-scg-taxonomy -T $THREADS -c $ANVIOANNOTATIONS/$name/$name-annotation.db
 
 # estimate genome taxonomy 
-# input: $LOCAL/$name/$name-annotation.db
-# output: $LOCAL3/$name/$name-taxonomies.txt
-anvi-estimate-genome-taxonomy -T $THREADS --just-do-it -c $LOCAL3/$name/$name-annotation.db -o $LOCAL3/$name/$name-taxonomies.txt
+# input: $MASTERDIR/$name/$name-annotation.db
+# output: $ANVIOANNOTATIONS/$name/$name-taxonomies.txt
+anvi-estimate-genome-taxonomy -T $THREADS --just-do-it -c $ANVIOANNOTATIONS/$name/$name-annotation.db -o $ANVIOANNOTATIONS/$name/$name-taxonomies.txt
 
 # estimate genomes completeness
-# input: $LOCAL/$name/$name-annotation.db
-# output: $LOCAL3/$name/$name-completeness.txt
-anvi-estimate-genome-completeness -c $LOCAL3/$name/$name-annotation.db -o $LOCAL3/$name/$name-completeness.txt
+# input: $MASTERDIR/$name/$name-annotation.db
+# output: $ANVIOANNOTATIONS/$name/$name-completeness.txt
+anvi-estimate-genome-completeness -c $ANVIOANNOTATIONS/$name/$name-annotation.db -o $ANVIOANNOTATIONS/$name/$name-completeness.txt
 
 # get contig stats for the contig
-# input: $LOCAL/$name/$name-annotation.db
-# output: $LOCAL3/$name/contigs-stats.txt
-anvi-display-contigs-stats $LOCAL3/$name/$name-annotation.db --report-as-text -o $LOCAL3/$name/contigs-stats.txt
+# input: $MASTERDIR/$name/$name-annotation.db
+# output: $ANVIOANNOTATIONS/$name/contigs-stats.txt
+anvi-display-contigs-stats $ANVIOANNOTATIONS/$name/$name-annotation.db --report-as-text -o $ANVIOANNOTATIONS/$name/contigs-stats.txt
 
 done
 
@@ -1098,42 +1098,42 @@ do
 
 # use python script to populate TABLE1
 # input: $TABLE1
-# input: $LOCAL3/$name/$name-taxonomies.txt
-# input: $LOCAL3/$name/contigs-stats.txt
-# input: $LOCAL/$name/$name-final-assembly-oriented.fasta
-# input: $LOCAL3/$name/$name-completeness.txt
-# input: $LOCAL3/$name/output/$name-coverage.txt
-# input: $LOCAL3/$name/output/tRNA-number.txt
-# input: $LOCAL2/$name-flye-assembly.fasta
-# input: $LOCAL2/$name-flye.log
-# input: $LOCAL2/$name-unicycler-assembly.fasta
-# input: $LOCAL2/$name-unicycler.log
-# input: $LOCAL2/$name-unicycler-long-assembly.fasta
-# input: $LOCAL2/$name-unicycler-long.log
-# input: $LOCAL2/$name-spades-assembly.fasta 
+# input: $ANVIOANNOTATIONS/$name/$name-taxonomies.txt
+# input: $ANVIOANNOTATIONS/$name/contigs-stats.txt
+# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
+# input: $ANVIOANNOTATIONS/$name/$name-completeness.txt
+# input: $ANVIOANNOTATIONS/$name/output/$name-coverage.txt
+# input: $ANVIOANNOTATIONS/$name/output/tRNA-number.txt
+# input: $ASSEMBLIES/$name-flye-assembly.fasta
+# input: $ASSEMBLIES/$name-flye.log
+# input: $ASSEMBLIES/$name-unicycler-assembly.fasta
+# input: $ASSEMBLIES/$name-unicycler.log
+# input: $ASSEMBLIES/$name-unicycler-long-assembly.fasta
+# input: $ASSEMBLIES/$name-unicycler-long.log
+# input: $ASSEMBLIES/$name-spades-assembly.fasta 
 # output: $TABLE1
 # requires: table1.py
-./table1.py $name $TABLE1 $LOCAL3/$name/$name-taxonomies.txt $LOCAL3/$name/contigs-stats.txt $LOCAL/$name/$name-final-assembly-oriented.fasta $LOCAL3/$name/$name-completeness.txt $LOCAL3/$name/output/$name-coverage.txt $LOCAL3/$name/output/tRNA-number.txt $LOCAL2/$name-flye-assembly.fasta $LOCAL2/$name-flye.log $LOCAL2/$name-unicycler-assembly.fasta $LOCAL2/$name-unicycler.log $LOCAL2/$name-unicycler-long-assembly.fasta $LOCAL2/$name-unicycler-long.log $LOCAL2/$name-spades-assembly.fasta 
+./table1.py $name $TABLE1 $ANVIOANNOTATIONS/$name/$name-taxonomies.txt $ANVIOANNOTATIONS/$name/contigs-stats.txt $MASTERDIR/$name/$name-final-assembly-oriented.fasta $ANVIOANNOTATIONS/$name/$name-completeness.txt $ANVIOANNOTATIONS/$name/output/$name-coverage.txt $ANVIOANNOTATIONS/$name/output/tRNA-number.txt $ASSEMBLIES/$name-flye-assembly.fasta $ASSEMBLIES/$name-flye.log $ASSEMBLIES/$name-unicycler-assembly.fasta $ASSEMBLIES/$name-unicycler.log $ASSEMBLIES/$name-unicycler-long-assembly.fasta $ASSEMBLIES/$name-unicycler-long.log $ASSEMBLIES/$name-spades-assembly.fasta 
 
 
 # use python script to populate TABLE2
 # input: $TABLE1
-# input: $LOCAL3/$name/$name-taxonomies.txt
-# input: $LOCAL3/$name/contigs-stats.txt
-# input: $LOCAL/$name/$name-final-assembly-oriented.fasta
-# input: $LOCAL3/$name/$name-completeness.txt
-# input: $LOCAL3/$name/output/$name-coverage.txt
-# input: $LOCAL3/$name/output/tRNA-number.txt
-# input: $LOCAL2/$name-flye-assembly.fasta
-# input: $LOCAL2/$name-flye.log
-# input: $LOCAL2/$name-unicycler-assembly.fasta
-# input: $LOCAL2/$name-unicycler.log
-# input: $LOCAL2/$name-unicycler-long-assembly.fasta
-# input: $LOCAL2/$name-unicycler-long.log
-# input: $LOCAL2/$name-spades-assembly.fasta 
+# input: $ANVIOANNOTATIONS/$name/$name-taxonomies.txt
+# input: $ANVIOANNOTATIONS/$name/contigs-stats.txt
+# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
+# input: $ANVIOANNOTATIONS/$name/$name-completeness.txt
+# input: $ANVIOANNOTATIONS/$name/output/$name-coverage.txt
+# input: $ANVIOANNOTATIONS/$name/output/tRNA-number.txt
+# input: $ASSEMBLIES/$name-flye-assembly.fasta
+# input: $ASSEMBLIES/$name-flye.log
+# input: $ASSEMBLIES/$name-unicycler-assembly.fasta
+# input: $ASSEMBLIES/$name-unicycler.log
+# input: $ASSEMBLIES/$name-unicycler-long-assembly.fasta
+# input: $ASSEMBLIES/$name-unicycler-long.log
+# input: $ASSEMBLIES/$name-spades-assembly.fasta 
 # output: $TABLE2
 # requires: table2.py
-./table2.py $name $TABLE2 $LOCAL3/$name/$name-taxonomies.txt $LOCAL3/$name/contigs-stats.txt $LOCAL/$name/$name-final-assembly-oriented.fasta $LOCAL3/$name/$name-completeness.txt $LOCAL3/$name/output/$name-coverage.txt $LOCAL3/$name/output/tRNA-number.txt $LOCAL2/$name-flye-assembly.fasta $LOCAL2/$name-flye.log $LOCAL2/$name-unicycler-assembly.fasta $LOCAL2/$name-unicycler.log $LOCAL2/$name-unicycler-long-assembly.fasta $LOCAL2/$name-unicycler-long.log $LOCAL2/$name-spades-assembly.fasta 
+./table2.py $name $TABLE2 $ANVIOANNOTATIONS/$name/$name-taxonomies.txt $ANVIOANNOTATIONS/$name/contigs-stats.txt $MASTERDIR/$name/$name-final-assembly-oriented.fasta $ANVIOANNOTATIONS/$name/$name-completeness.txt $ANVIOANNOTATIONS/$name/output/$name-coverage.txt $ANVIOANNOTATIONS/$name/output/tRNA-number.txt $ASSEMBLIES/$name-flye-assembly.fasta $ASSEMBLIES/$name-flye.log $ASSEMBLIES/$name-unicycler-assembly.fasta $ASSEMBLIES/$name-unicycler.log $ASSEMBLIES/$name-unicycler-long-assembly.fasta $ASSEMBLIES/$name-unicycler-long.log $ASSEMBLIES/$name-spades-assembly.fasta 
 
 done
 
@@ -1167,11 +1167,11 @@ for name in $MAGS
 do
 
 # get the fraction of nanopore reads
-NANO=`grep -c $name $LOCAL1/nanopore-unfilteredf-to-final.sam`
+NANO=`grep -c $name $POLISHING/nanopore-unfilteredf-to-final.sam`
 NANFRAC=`echo "scale=4; $NANO/$TOTALNANOPORE*100" | bc`
 
 # get the fraction of illumina reads
-ILLU=`grep -c $name $LOCAL1/illumina-to-final.sam`
+ILLU=`grep -c $name $POLISHING/illumina-to-final.sam`
 ILLFRAC=`echo "scale=4; $ILLU/$TOTALILLUMINA*100" | bc`
 
 # print fractions of illumina and nanopore reads to table 2
