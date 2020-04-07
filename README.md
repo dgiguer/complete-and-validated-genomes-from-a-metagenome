@@ -16,21 +16,21 @@ We applied the following strategy to orient the genomes:
 
 ### Counting long read coverage at beginning and end of fasta reference
 
-After filtering Nanopore reads by > 90% query coverage, apparent read coverage at the beginning and end of the reference genome will appear to decrease because `minimap2` does not consider circular genomes when mapping. Therefore we applied the following strategy:
+After filtering Nanopore reads by > 90% query coverage, apparent read coverage at the beginning and end of the reference genome will appear to decrease because `minimap2` will map a read only to the start **or** end of a fasta file, which causes apparent query coverage to be artifically low. Therefore we applied the following strategy:
 
-1. Using the oriented genome, identify the (approximately) halfway point of the genome based on its length.
+1. Using the oriented genome, approximate the mid-point of the genome based on its length.
 
-2. Using python (modify-genome.py), make a re-oriented copy of the genome called "reverse-start" that begins at the halfway point of the oriented genome.
+2. Make a re-oriented copy of the genome that begins at the halfway point of the oriented genome using `modify-genome.py`. 
 
-3. Map long reads to both the forward and reverse-oriented genomes, separately. 
+3. Map long reads to both the original and re-oriented genomes, separately. 
 
-4. To determine the long read coverage for the first and last quarters of the complete genome calculate the coverage of every 1000bp of the second and third quarters of the reverse-oriented genome. Because the second and third quarters of the reverse-oriented genome is relatively far from the origin of the reverse-oriented genome, we can assume the filtered reads were accruately mapped to this region by `minimap2`.
+4. To determine the long read coverage for the first and last quarters of the original genome, calculate the coverage in windows of 1000 bp of the second and third quarters of the re-oriented genome. Because the second and third quarters of the re-oriented genome are relatively far from the origin of the re-oriented genome, reads will not be mapped off the "edge" of the fasta file (assuming the read length is relatively small compared to genome size). Coverage of filtered reads can therefore be correctly calculated at the start of end of a fasta file.
 
-5. To determine the long read coverage for the second and third quarters of the complete genome calculate the coverage of every 1000bp of the second and third quarters of the forward-oriented genome. 
+5. To determine the long read coverage for the second and third quarters of the complete genome calculate the coverage of every 1000 bp of the second and third quarters of the original genome. 
 
-6. Add the coverage from each quarter of the genome together to get the complete genome coverage.
+6. Concatenate the coverage from each quarter of the genome together to get the complete genome coverage.
 
-7. The final 1000bp segment of the genome is assumed to be 1000bp in length, and it likely includes coverage of part of the start of the genome. To accruately determine the coverage of this end segment of the genome, multiply the calculated coverage by the fraction of the size of the end segment of the genome divided by 1000bp. 
+7. The final 1000 bp segment of the genome is assumed to be 1000 bp in length, and it likely includes coverage of part of the start of the genome. To accruately determine the coverage of this end segment of the genome, multiply the calculated coverage by the fraction of the size of the end segment of the genome divided by 1000bp. 
 
 ### Generating genome plots using the circlize R package 
 
