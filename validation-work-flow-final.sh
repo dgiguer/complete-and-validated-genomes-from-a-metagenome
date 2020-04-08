@@ -106,6 +106,7 @@ awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t
 awk '$0 ~ "@"{print $0}' $POLISHING/raw-genome-nanopore.sam > $POLISHING/nanopore-filtered-to-raw.sam
 
 # filter 
+# while parsing the first file, save the first field in an array incrementing (++) after each line. Once the first file has been parsed (NOT NR==FNR), stop saving the first field in the array (;next) and evaluate whether the arguments in the array are in a line of the second file. If so, save the whole line
 awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $POLISHING/final-read-names.txt $POLISHING/raw-genome-nanopore.sam >> $POLISHING/nanopore-filtered-to-raw.sam
 
 # progress
@@ -295,6 +296,7 @@ awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t
 # filter the reverse nanopore mapped reads for a primary alignment (i.e., bit flag in sam output is 0 or 16)
 # this gets the sam headers in the file
 awk '$0 ~ "@"{print $0}' $POLISHING/nanopore-unfilteredr-to-final.sam > $POLISHING/nanopore-filteredr-to-final.sam
+# while parsing the first file, save the first field in an array incrementing (++) after each line. Once the first file has been parsed (NOT NR==FNR), stop saving the first field in the array (;next) and evaluate whether the arguments in the array are in a line of the second file. If so, save the whole line
 awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $POLISHING/final-read-names.txt $POLISHING/nanopore-unfilteredr-to-final.sam >> $POLISHING/nanopore-filteredr-to-final.sam
 
 # extract relevant information on nanopore forward sequence alignments scores
@@ -304,6 +306,7 @@ awk '$0 !~ "@" {a = $1; b = $2; c = substr($14, 6); d = $6; print a"\t"b"\t"c"\t
 ./cigar-parse.py $POLISHING/sam.txt $POLISHING/final-read-names.txt
 
 # filter the reverse nanopore mapped reads for a primary alignment (i.e., bit flag in sam output is 0 or 16)
+# while parsing the first file, save the first field in an array incrementing (++) after each line. Once the first file has been parsed (NOT NR==FNR), stop saving the first field in the array (;next) and evaluate whether the arguments in the array are in a line of the second file. If so, save the whole line
 awk '$0 ~ "@"{print $0}' $POLISHING/nanopore-unfilteredf-to-final.sam > $POLISHING/nanopore-filteredf-to-final.sam
 awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $POLISHING/final-read-names.txt $POLISHING/nanopore-unfilteredf-to-final.sam >> $POLISHING/nanopore-filteredf-to-final.sam
 
@@ -394,6 +397,7 @@ do
     grep "^@" $MASTERDIR/$name/nanopore-filtered-to-final-reverse.fastq > $MASTERDIR/$name/unique-read-names.txt
 
     # concatenate reads that are not found in the fastq already to the fastq
+    # while parsing the first file, save the first field in an array incrementing (++) after each line. Once the first file has been parsed (NOT NR==FNR), stop saving the first field in the array (;next) and evaluate whether the arguments in the array are in a line of the second file. If so, save the whole line
     awk 'NR==FNR{c[$1]++;next};c[$1] > 0' $MASTERDIR/$name/unique-read-names.txt $MASTERDIR/$name/nanopore-filtered-to-final-forward.fastq | grep -v -A 3 -f - >> $MASTERDIR/$name/nanopore-filtered-to-final.fastq
 
     # separate the reads into forward and reverse types (could have used bam2fastq, still required a sorted bam file)
