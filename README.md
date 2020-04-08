@@ -2,7 +2,7 @@
 
 Daniel J Giguere, Alexander T Bacheli
 
-This repository is intended to accompany the pre-print (TODO insert link) by providing the code used, as well as a few explanations. 
+This repository is intended to accompany the pre-print (TODO insert link) by providing the code used, and an example for the circos plot visualizations. The main pipeline can be found in [validation-work-flow-final.sh](validation-work-flow-final.sh). 
 
 ### Orienting genomes on dnaA gene
 
