@@ -30,7 +30,7 @@ After filtering Nanopore reads by > 90% query coverage, apparent read coverage a
 
 6. Concatenate the coverage from each quarter of the genome together to get the complete genome coverage.
 
-7. The final 1000 bp segment of the genome is assumed to be 1000 bp in length, and it likely includes coverage of part of the start of the genome (refer to Mapping_Figure.png). To accruately determine the coverage of this end segment of the genome, multiply the calculated coverage by the fraction of the size of the end segment of the genome divided by 1000bp. 
+7. The final calculated coverage segment of the genome is assumed to be 1000 bp in length. Because most genomes are not an exact factor of 1000, a given genome likely includes the coverage of part of the start of the genome (refer to Mapping_Figure.png). To accruately determine the coverage of this end segment of the genome, trim the coverage to the correct length of the genome. 
 
 ### Generating genome plots using the circlize R package 
 
