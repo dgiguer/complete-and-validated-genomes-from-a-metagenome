@@ -30,7 +30,7 @@ After filtering Nanopore reads by > 90% query coverage, apparent read coverage a
 
 6. Concatenate the coverage from each quarter of the genome together to get the complete genome coverage.
 
-7. The final 1000 bp segment of the genome is assumed to be 1000 bp in length, and it likely includes coverage of part of the start of the genome. To accruately determine the coverage of this end segment of the genome, multiply the calculated coverage by the fraction of the size of the end segment of the genome divided by 1000bp. 
+7. The final 1000 bp segment of the genome is assumed to be 1000 bp in length, and it likely includes coverage of part of the start of the genome (refer to Mapping_Figure.png). To accruately determine the coverage of this end segment of the genome, multiply the calculated coverage by the fraction of the size of the end segment of the genome divided by 1000bp. 
 
 ### Generating genome plots using the circlize R package 
 
@@ -44,3 +44,17 @@ The R package `circlize` was used to generate each of the genome figure. An exam
   - coding sequences (positive and negative strand in separate files)
   - location of tRNA and rRNA genes
   - cytoband file (required for length and genome name)
+
+### Required Python Scripts
+
+`validation-work-flow.sh` requires a number of scripts to run. These scripts are:
+- __bed-file-orientation.py__
+- __cigar-parse.py__ 
+- __dot-plot.py__
+- __extract-circularized-fasta.py__
+- __modify-genome.py__
+- __modify-nanopore-bed.py__
+- __orient.py__
+- __table1.py__
+- __table2.py__
+
