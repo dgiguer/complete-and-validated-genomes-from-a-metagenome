@@ -254,13 +254,13 @@ for name in $MAGS
     # re-orient the genome around the dnaA gene where there is a switch in GC-skew
     grep 'dnaA\|DnaA\|dnaa' $MASTERDIR/$name/circos/prokka/$name.gff > $MASTERDIR/$name/circos/dnaA-loci.txt
 
-    ./orient-v2.py $MASTERDIR/$name/circos/dnaA-loci.txt $MASTERDIR/$name/$name-final-assembly.fasta $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name $MASTERDIR/$name/$name-orientation-shift.txt
+    ./orient.py $MASTERDIR/$name/circos/dnaA-loci.txt $MASTERDIR/$name/$name-final-assembly.fasta $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name $MASTERDIR/$name/$name-orientation-shift.txt
 
     # get the gc content, gc skew and culmulative gc skew in 1000 base windows
     ./circlize_gc_information.R -i $MASTERDIR/$name/$name-final-assembly-oriented.fasta -o $MASTERDIR/$name/circos/$name-gc-info.txt
 
     # rebuild the final assembly to have 80kb of the beginning of the genome copied to the end of the genome to improve remapping of long reads
-    ./modify-genome-v4.py $MASTERDIR/$name/$name-final-assembly-oriented.fasta $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
+    ./modify-genome.py $MASTERDIR/$name/$name-final-assembly-oriented.fasta $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
 
     # group all genomes oriented and their reverse pair
     cat $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta >> $POLISHING/all-reverse-start.fasta
@@ -466,7 +466,7 @@ for name in $MAGS
 do
 
     # create dot plot(s) for the given genome
-    ./dot-plot2.py $name $DOTPLOTS $SMALLPLOTS $ASSEMBLIES/$name-flye-assembly.fasta $MASTERDIR/$name/$name-final-assembly.fasta
+    ./dot-plot.py $name $DOTPLOTS $SMALLPLOTS $ASSEMBLIES/$name-flye-assembly.fasta $MASTERDIR/$name/$name-final-assembly.fasta
 
     mv $DOTPLOTS/$name $MASTERDIR/output/dotplots
 
@@ -514,7 +514,7 @@ do
     grep $name $POLISHING/illumina-hard1.regions.bed > $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed
 
     # modify the unfiltered.regions.bed and filtered.regions.bed files to include accurate measurements
-    ./modify-nanopore-bed-v2.py $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name
+    ./modify-nanopore-bed.py $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name
 
     # generate length of genome
     awk '/^>/{if (l!="") l=0; next}{l+=length($0)}END{print l}' $MASTERDIR/$name/$name-final-assembly-oriented.fasta > $MASTERDIR/$name/circos/$name-final-length.txt
