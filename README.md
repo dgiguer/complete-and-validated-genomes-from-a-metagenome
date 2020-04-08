@@ -34,7 +34,8 @@ After filtering Nanopore reads by > 90% query coverage, apparent read coverage a
 
 ### Generating genome plots using the circlize R package 
 
-The R package `circlize` was used to generate each of the genome figure. An example script is available to reproduce the plots for one genome that requires the following as input:
+The R package `circlize` was used to generate each of the genome figure. An example script is available as (circos.md)[circos.md] to reproduce the plots for one genome that requires the following as input:  
+
   - table of GC content, skew and culmulative skew calculated from `circlize_gc_information.R`
   - unfiltered Illumina coverage
   - filtered Illumina coverage

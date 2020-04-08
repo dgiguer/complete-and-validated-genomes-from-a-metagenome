@@ -1,4 +1,4 @@
-# Visualizing coverage in circos plots
+# Visualizing coverage with the circlize R package
 
 Daniel J Giguere
 
