@@ -1,5 +1,7 @@
 # Complete and validated genomes from a metagenome
 
+[![DOI](https://zenodo.org/badge/253534844.svg)](https://zenodo.org/badge/latestdoi/253534844)
+
 Daniel J Giguere, Alexander T Bacheli
 
 This repository is intended to accompany the pre-print (TODO insert link) by providing the code used, and an example for the circos plot visualizations. The main pipeline can be found in [validation-work-flow-final.sh](validation-work-flow-final.sh). 
