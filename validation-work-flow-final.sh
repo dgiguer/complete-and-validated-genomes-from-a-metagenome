@@ -237,66 +237,7 @@ echo Finished all validation and polishing
 ###################################
 
 for name in $MAGS
-<<<<<<< HEAD
-do
-
-#################
-# these steps are done to generate improved nanopore mapping to the final assembly
-
-# calculating GC content and GC skew
-
-# from the fasta file itself, use seqinr to calculate the GC content in 1000 base windows that can be added to the files in R
-
-# activate conda virtual environment to run prokka
-source /Volumes/data/bin/miniconda3/bin/activate
-
-# run prokka on all genomes, make sure you have the most recent version of tbl2asn, or this will not work
-# input: $name $MASTERDIR/$name/$name-final-assembly.fasta
-# output (multiple files; relevant ones provided) $MASTERDIR/$name/circos/prokka-initial/$name.gff
-prokka --outdir $MASTERDIR/$name/circos/prokka --prefix $name $MASTERDIR/$name/$name-final-assembly.fasta --cpu $THREADS
-
-# re-orient the genome around the dnaA gene where there is a switch in GC-skew
-# input: $MASTERDIR/$name/circos/prokka-initial/$name.gff
-# output: $MASTERDIR/$name/circos/dnaA-loci.txt
-grep 'dnaA\|DnaA\|dnaa' $MASTERDIR/$name/circos/prokka/$name.gff > $MASTERDIR/$name/circos/dnaA-loci.txt
-
-# input: $MASTERDIR/$name/circos/dnaA-loci.txt
-# input: $MASTERDIR/$name/$name-final-assembly.fasta
-# output: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
-# output: $MASTERDIR/$name/$name-orientation-shift.txt
-# requires: orient.py
-./orient.py $MASTERDIR/$name/circos/dnaA-loci.txt $MASTERDIR/$name/$name-final-assembly.fasta $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name $MASTERDIR/$name/$name-orientation-shift.txt
-
-# get the gc content, gc skew and culmulative gc skew in 1000 base windows
-# input: $MASTERDIR/$name/$name-final-assembly.fasta
-# output: $MASTERDIR/$name/$name-gc-info.txt
-# requires: circlize_gc_information.R
-./circlize_gc_information.R -i $MASTERDIR/$name/$name-final-assembly-oriented.fasta -o $MASTERDIR/$name/circos/$name-gc-info.txt
-
-# rebuild the final assembly to have 80kb of the beginning of the genome copied to the end of the genome to improve remapping of long reads
-# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
-# output: $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
-# requires: modify-genome.py
-./modify-genome.py $MASTERDIR/$name/$name-final-assembly-oriented.fasta $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
-
-# group all genomes oriented and their reverse pair
-# input: $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta
-# output: $POLISHING/all-reverse-start.fasta
-cat $MASTERDIR/$name/$name-final-assembly-reverse-start.fasta >> $POLISHING/all-reverse-start.fasta
-# group all oriented genomes
-# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
-# output: $POLISHING/all-oriented.fasta
-cat $MASTERDIR/$name/$name-final-assembly-oriented.fasta >> $POLISHING/all-oriented.fasta
-
-done
-
-# progress update
-echo Finished genome orientation
-
-
-=======
     do
->>>>>>> 2defe9e58d43ffe3638b7878c34569cbd0c20615
 
     # these steps are done to generate improved nanopore mapping to the final assembly
 
@@ -524,18 +465,8 @@ echo Finished all re-assemblies
 for name in $MAGS
 do
 
-<<<<<<< HEAD
-# create dot plot(s) for the given genome
-# input: $ASSEMBLIES/$name-flye-assembly.fasta
-# input: $MASTERDIR/$name/$name-final-assembly.fasta
-# output: 
-# output dir: $DOTPLOTS/$name has various files (not used again)
-# requires: dot-plot.py and dot-plot.R
-./dot-plot.py $name $DOTPLOTS $SMALLPLOTS $ASSEMBLIES/$name-flye-assembly.fasta $MASTERDIR/$name/$name-final-assembly.fasta
-=======
     # create dot plot(s) for the given genome
     ./dot-plot2.py $name $DOTPLOTS $SMALLPLOTS $ASSEMBLIES/$name-flye-assembly.fasta $MASTERDIR/$name/$name-final-assembly.fasta
->>>>>>> 2defe9e58d43ffe3638b7878c34569cbd0c20615
 
     mv $DOTPLOTS/$name $MASTERDIR/output/dotplots
 
@@ -574,107 +505,6 @@ gunzip $POLISHING/illumina-hard1.regions.bed.gz
 for name in $MAGS
 do
 
-<<<<<<< HEAD
-# collect only the relevant genome
-# input: $POLISHING/nanopore-filteredf1.regions.bed
-# output: $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed
-grep $name $POLISHING/nanopore-filteredf1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed
-# input: $POLISHING/nanopore-unfilteredf1.regions.bed
-# output: $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed
-grep $name $POLISHING/nanopore-unfilteredf1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed
-# input: $POLISHING/nanopore-filteredr1.regions.bed
-# output: $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed
-grep $name $POLISHING/nanopore-filteredr1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed
-# input: $POLISHING/nanopore-unfilteredr1.regions.bed
-# output: $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed
-grep $name $POLISHING/nanopore-unfilteredr1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed
-
-# input: $POLISHING/illumina-soft1.regions.bed
-# output: $MASTERDIR/$name/circos/$name-illumina-soft.regions.bed
-grep $name $POLISHING/illumina-soft1.regions.bed > $MASTERDIR/$name/circos/$name-illumina-soft.regions.bed
-# input: $POLISHING/illumina-hard1.regions.bed
-# output: $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed
-grep $name $POLISHING/illumina-hard1.regions.bed > $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed
-
-# modify the unfiltered.regions.bed and filtered.regions.bed files to include accurate measurements
-# input: $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed
-# input: $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed
-# input: $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed
-# input: $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed
-# input: $MASTERDIR/$name/$name-final-assembly-oriented.fasta
-# output: $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed
-# output: $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed
-# requires: modify-nanopore-bed.py
-./modify-nanopore-bed.py $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name
-
-# generate length of genome
-# input: $MASTERDIR/$name/$name-final-assembly.fasta
-# output: $MASTERDIR/$name/circos/$name-final-length.txt
-awk '/^>/{if (l!="") l=0; next}{l+=length($0)}END{print l}' $MASTERDIR/$name/$name-final-assembly-oriented.fasta > $MASTERDIR/$name/circos/$name-final-length.txt
-
-# get length of genome
-# input: $MASTERDIR/$name/circos/$name-final-length.txt
-# output: $length
-length=`cat $MASTERDIR/$name/circos/$name-final-length.txt`
-# generate cytoband file needed for circlize
-# input: $length
-# output: $MASTERDIR/$name/circos/$name-cytoband.txt
-echo -e "$name\t0\t$length\tnot_real\tnot_real" > $MASTERDIR/$name/circos/$name-cytoband.txt
-
-# generate the required bed files from the .gff output.
-
-# first two lines are headers
-# i'm printing it into bed format, then printing "1" as a value file.
-
-# generate header for BED files for positive strand, negative strand, tRNA and rRNA
-# output: $MASTERDIR/$name/circos/$name-cds-positive.bed
-# output: $MASTERDIR/$name/circos/$name-cds-negative.bed
-# output: $MASTERDIR/$name/circos/$name-cds-trna.bed
-# output: $MASTERDIR/$name/circos/$name-cds-rrna.bed
-echo -e "chr\tstart\tend\tcds_pos" > $MASTERDIR/$name/circos/$name-cds-positive.bed
-echo -e "chr\tstart\tend\tcds_neg" > $MASTERDIR/$name/circos/$name-cds-negative.bed
-echo -e "chr\tstart\tend\ttrna" > $MASTERDIR/$name/circos/$name-cds-trna.bed
-echo -e "chr\tstart\tend\trrna" > $MASTERDIR/$name/circos/$name-cds-rrna.bed
-
-# use tab separation (OFS arg)
-# coding sequences
-# input: $MASTERDIR/$name/circos/prokka/$name.gff
-# output: $MASTERDIR/$name/circos/$name-cds-positive.bed
-awk -v OFS='\t' '$3 ~ "CDS" && $7 ~ "+" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-positive.bed
-# input: $MASTERDIR/$name/circos/prokka/$name.gff
-# output: $MASTERDIR/$name/circos/$name-cds-negative.bed
-awk -v OFS='\t' '$3 ~ "CDS" && $7 ~ "-" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-negative.bed
-
-# get tRNA and rRNA gene loci
-# input: $MASTERDIR/$name/circos/prokka/$name.gff
-# output: $name/${name}-cds-trna.bed
-awk -v OFS='\t' '$3 ~ "tRNA" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-trna.bed
-# input: $MASTERDIR/$name/circos/prokka/$name.gff
-# output: $MASTERDIR/$name/circos/$name-cds-rrna.bed
-awk -v OFS='\t' '$3 ~ "rRNA" {print $1, $4, $5, "1"}' $MASTERDIR/$name/circos/prokka/$name.gff >> $MASTERDIR/$name/circos/$name-cds-rrna.bed
-
-# modify the bed files based on the positions of dnaa gene rarrangement and size of the genome
-# input: $MASTERDIR/$name/$name-orientation-shift.txt
-# input: $MASTERDIR/$name/circos/$name-cds-trna.bed
-# input: $MASTERDIR/$name/circos/$name-cds-rrna.bed
-# input: $MASTERDIR/$name/circos/$name-cds-positive.bed
-# input: $MASTERDIR/$name/circos/$name-cds-negative.bed
-# output: $MASTERDIR/$name/$name-orientation-shift.txt
-# output: $MASTERDIR/$name/circos/$name-cds-trna.bed
-# output: $MASTERDIR/$name/circos/$name-cds-rrna.bed
-# output: $MASTERDIR/$name/circos/$name-cds-positive.bed
-# output: $MASTERDIR/$name/circos/$name-cds-negative.bed
-# requires: bed-file-orientation.py
-./bed-file-orientation.py $MASTERDIR/$name/$name-orientation-shift.txt $MASTERDIR/$name/circos/$name-cds-trna.bed $MASTERDIR/$name/circos/$name-cds-rrna.bed $MASTERDIR/$name/circos/$name-cds-positive.bed $MASTERDIR/$name/circos/$name-cds-negative.bed
-
-mv $MASTERDIR/$name/circos/$name-cds* $MASTERDIR/output/circos
-mv $MASTERDIR/$name/circos/$name-gc* $MASTERDIR/output/circos
-mv $MASTERDIR/$name/circos/$name-cytoband.txt $MASTERDIR/output/circos
-mv $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed $MASTERDIR/output/circos
-mv $MASTERDIR/$name/circos/$name-illumina-soft.regions.bed $MASTERDIR/output/circos
-mv $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed $MASTERDIR/output/circos
-mv $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/output/circos
-=======
     # collect only the relevant genome
     grep $name $POLISHING/nanopore-filteredf1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed
     grep $name $POLISHING/nanopore-unfilteredf1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed
@@ -682,7 +512,6 @@ mv $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/outp
     grep $name $POLISHING/nanopore-unfilteredr1.regions.bed > $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed
     grep $name $POLISHING/illumina-soft1.regions.bed > $MASTERDIR/$name/circos/$name-illumina-soft.regions.bed
     grep $name $POLISHING/illumina-hard1.regions.bed > $MASTERDIR/$name/circos/$name-illumina-hard.regions.bed
->>>>>>> 2defe9e58d43ffe3638b7878c34569cbd0c20615
 
     # modify the unfiltered.regions.bed and filtered.regions.bed files to include accurate measurements
     ./modify-nanopore-bed-v2.py $MASTERDIR/$name/circos/$name-nanopore-filtered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfiltered.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredf.regions.bed $MASTERDIR/$name/circos/$name-nanopore-filteredr.regions.bed $MASTERDIR/$name/circos/$name-nanopore-unfilteredr.regions.bed $MASTERDIR/$name/$name-final-assembly-oriented.fasta $name
