@@ -48,13 +48,13 @@ The R package `circlize` was used to generate each of the genome figure. An exam
 ### Required Python Scripts
 
 `validation-work-flow.sh` requires a number of scripts to run. These scripts are:
-- __bed-file-orientation.py__
-- __cigar-parse.py__ 
-- __dot-plot.py__
-- __extract-circularized-fasta.py__
-- __modify-genome.py__
-- __modify-nanopore-bed.py__
-- __orient.py__
-- __table1.py__
-- __table2.py__
+- __bed-file-orientation.py__: orienting the prokka annotations according to the start of the genome
+- __cigar-parse.py__: filtering reads aligned to a genome
+- __dot-plot.py__ for creating dot plots of segments of a genome and the flye re-assembled genome against the polished genome (also requires dot-plot.R)
+- __extract-circularized-fasta.py__: extracting circularized genomes above a certain minimum size for anaylsis
+- __modify-genome.py__: re-orienting a genome so that the start of the genome begins half way into the fasta sequence
+- __modify-nanopore-bed.py__: calculating genome coverage from both the "forward-oriented" and "reverse-oriented" genomes
+- __orient.py__: orienting the genome to start at the dnaA gene
+- __table1.py__: creating the first summary table
+- __table2.py__: creating the second summary table
 
