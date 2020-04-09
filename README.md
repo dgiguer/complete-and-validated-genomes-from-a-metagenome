@@ -4,7 +4,9 @@
 
 Daniel J Giguere, Alexander T Bacheli
 
-This repository is intended to accompany the [pre-print](https://www.biorxiv.org/content/10.1101/2020.04.08.032540v1) by providing the code used, and an example for the circos plot visualizations. The main pipeline can be found in [validation-work-flow-final.sh](validation-work-flow-final.sh). 
+**EBI is currently unable to make the read files associated with the Project public due to technical issue. Raw reads are available to download (link here when finished uploading) in the mean time.** 
+
+This repository is intended to accompany the [pre-print](https://www.biorxiv.org/content/10.1101/2020.04.08.032540v1) by providing the code used, and an example for the circos plot visualizations. The main pipeline can be found in [validation-work-flow-final.sh](validation-work-flow-final.sh). Fasta files of the genomes are available [here](data/genomes)
 
 ### Orienting genomes on dnaA gene
 
@@ -34,7 +36,7 @@ After filtering Nanopore reads by > 90% query coverage, apparent read coverage a
 
 7. The final calculated coverage segment of the genome is assumed to be 1000 bp in length. Because most genomes are not an exact factor of 1000, a given genome likely includes the coverage of part of the start of the genome (refer to image below). To accruately determine the coverage of this end segment of the genome, trim the coverage to the correct length of the genome. 
 
-![Mapping figure explained](mapping-figure.png)
+![Mapping figure explained](data/counting.png)
 
 ### Generating genome plots using the circlize R package 
 
