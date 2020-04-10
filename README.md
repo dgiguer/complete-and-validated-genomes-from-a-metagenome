@@ -4,7 +4,7 @@
 
 Daniel J Giguere, Alexander T Bacheli
 
-**EBI is currently unable to make the read files associated with the Project public due to technical issue. Raw reads are available to download (link here when finished uploading) in the mean time.** 
+**EBI is currently unable to make the read files associated with the Project public due to technical issue. Raw reads are available to download [from this link](https://uwoca-my.sharepoint.com/:f:/g/personal/dgiguer_uwo_ca/EulzfHO0ytNFhN8C8hWCjkEBakNF_wlnIUMbCR8izXw2yw?e=iE2NZp) in the mean time.** 
 
 This repository is intended to accompany the [pre-print](https://www.biorxiv.org/content/10.1101/2020.04.08.032540v1) by providing the code used, and an example for the circos plot visualizations. The main pipeline can be found in [validation-work-flow-final.sh](validation-work-flow-final.sh). Fasta files of the genomes are available [here](data/genomes)
 
