@@ -33,17 +33,17 @@ opt = parse_args(parser)
 
 #Read in a fasta as a list of vectors of characters - this means that each header will be 1 item in the list
 seq1 <- read.fasta(file=opt$query_sequence,as.string=FALSE,seqtype=c("DNA"))
-# seq2 <-read.fasta(file=opt$sequence_file,as.string=FALSE,seqtype=c("DNA"))
+seq2 <-read.fasta(file=opt$sequence_file,as.string=FALSE,seqtype=c("DNA"))
 
 # generate a dotplot of the first vector in the list against itself without labels on axis
 if (opt$labels == 0){
         png(opt$output_directory)
-        seqinr::dotPlot(seq1[[1]],seq1[[1]],wsize=as.numeric(opt$window),wstep=as.numeric(opt$steps),nmatch=as.numeric(opt$matches), xlab='', ylab='', xaxt='n', yaxt='n')
+        seqinr::dotPlot(seq1[[1]],seq2[[1]],wsize=as.numeric(opt$window),wstep=as.numeric(opt$steps),nmatch=as.numeric(opt$matches), xlab='', ylab='', xaxt='n', yaxt='n')
         dev.off()
 # generate a dotplot of the first vector in the list against itself
 } else {
         pdf(opt$output_directory)
-        seqinr::dotPlot(seq1[[1]],seq1[[1]],wsize=as.numeric(opt$window),wstep=as.numeric(opt$steps),nmatch=as.numeric(opt$matches), xlab='', ylab='')
+        seqinr::dotPlot(seq1[[1]],seq2[[1]],wsize=as.numeric(opt$window),wstep=as.numeric(opt$steps),nmatch=as.numeric(opt$matches), xlab='', ylab='')
         dev.off()
 }
 
